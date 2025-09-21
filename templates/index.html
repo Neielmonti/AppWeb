@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Procesamiento de Imágenes</title>
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 30px;
+        font-size: 2rem;
+        line-height: 1.5;    /* 👈 más espaciado */
+        color: #222;         /* 👈 texto más oscuro */
+    }
+    h1 {
+        color: darkblue;
+        font-size: 2rem;     /* 👈 título bien visible */
+    }
+    form {
+        margin-top: 20px;
+        font-size: 16px;
+    }
+    button {
+        margin-left: 10px;
+        padding: 8px 14px;
+        font-size: 16px;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>📷 Analizador de Imágenes</h1>
+    <p>Subí una imagen para ver sus estadísticas.</p>
+    <form method="post" enctype="multipart/form-data">
+    <input type="file" name="files" accept="image/*" multiple required>
+    <button type="submit">Subir y Analizar</button>
+    </form>
+  </body>
+</html>

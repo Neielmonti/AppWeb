@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <title>Resultados</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 20px; }
+      img { max-width: 400px; margin: 10px; }
+      .card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+    <h1>📊 Resultados del análisis</h1>
+    {% for r in resultados %}
+      <div class="card">
+        <h2>{{ r.filename }}</h2>
+        <img src="/{{ r.filepath }}" alt="Imagen original">
+        <img src="/{{ r.histograma }}" alt="Histograma">
+        <pre>{{ r.stats | tojson(indent=2) }}</pre>
+      </div>
+    {% endfor %}
+    <a href="/">⬅️ Volver</a>
+  </body>
+</html>
