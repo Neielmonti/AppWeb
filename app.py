@@ -1,7 +1,8 @@
 from flask import Flask, render_template, request
 import os
 from werkzeug.utils import secure_filename
-from analisis import analizar_imagen  # la función la vamos a ajustar
+from analisis import analizar_imagen
+from augmentation import augmentar_imagenes
 import uuid
 
 UPLOAD_FOLDER = "static/uploads"
@@ -48,6 +49,33 @@ def index():
         return render_template("resultados.html", resultados=resultados)
 
     return render_template("index.html")
+
+@app.route("/augmentar", methods=["GET", "POST"])
+def augmentar():
+    if request.method == "POST":
+        if "files" not in request.files:
+            return "⚠️ No se enviaron archivos."
+
+        files = request.files.getlist("files")
+        imagenes = []
+
+        for file in files:
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+                file.save(filepath)
+                imagenes.append(filepath)
+
+        # Generar dataset aumentado → devuelve lista [(nombre, ruta)] o zip
+        resultados = augmentar_imagenes(imagenes, app.config["RESULTS_FOLDER"])
+
+        # 🔹 Si querés devolver un ZIP para descargar
+        # return send_file(resultados, as_attachment=True, download_name="dataset_aumentado.zip")
+
+        # 🔹 Si preferís mostrar una galería en la web:
+        return render_template("augment_resultados.html", resultados=resultados)
+
+    return render_template("augment.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

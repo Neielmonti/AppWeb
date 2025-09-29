@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Aumentación de Dataset</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 30px; font-size: 18px; }
+    h1 { color: darkgreen; }
+    form { margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>🔄 Aumentación de Dataset</h1>
+  <p>Subí varias imágenes para generar versiones aumentadas (rotación, zoom, etc).</p>
+  <form method="post" enctype="multipart/form-data">
+    <input type="file" name="files" accept="image/*" multiple required>
+    <button type="submit">Subir y Augmentar</button>
+  </form>
+</body>
+</html>
