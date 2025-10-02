@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import os
+import tempfile
+import shutil
 from werkzeug.utils import secure_filename
 from analisis import analizar_imagen
 from augmentation import augmentar_imagenes
+import zipfile
 import uuid
 
 UPLOAD_FOLDER = "static/uploads"
@@ -76,6 +79,38 @@ def augmentar():
         return render_template("augment_resultados.html", resultados=resultados)
 
     return render_template("augment.html")
+
+@app.route("/resize", methods=["GET", "POST"])
+def resize():
+    if request.method == "POST":
+        if "file" not in request.files:
+            return "⚠️ No se envió ningún archivo ZIP."
+
+        file = request.files["file"]
+        if not file.filename.endswith(".zip"):
+            return "⚠️ Solo se aceptan archivos ZIP."
+
+        temp_input = tempfile.mkdtemp()
+        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "resized")
+        os.makedirs(temp_output, exist_ok=True)
+
+        zip_path = os.path.join(temp_input, "dataset.zip")
+        file.save(zip_path)
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(temp_input)
+
+        from augmentation import resize_dataset
+        procesados = resize_dataset(temp_input, temp_output, scale=0.3)
+
+        # Crear ZIP
+        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_resized.zip")
+        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
+
+        return render_template("resize_resultados.html",
+                               procesados=procesados,
+                               zip_path="static/results/dataset_resized.zip")
+
+    return render_template("resize.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dataset Redimensionado</title>
+</head>
+<body>
+    <h1>✅ Dataset Redimensionado</h1>
+    <p>Se procesaron {{ procesados|length }} imágenes:</p>
+    <ul>
+        {% for img in procesados %}
+            <li>{{ img }}</li>
+        {% endfor %}
+    </ul>
+
+    <p><a href="{{ zip_path }}">📥 Descargar dataset redimensionado</a></p>
+</body>
+</html>
