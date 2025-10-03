@@ -56,27 +56,35 @@ def index():
 @app.route("/augmentar", methods=["GET", "POST"])
 def augmentar():
     if request.method == "POST":
-        if "files" not in request.files:
-            return "⚠️ No se enviaron archivos."
+        if "file" not in request.files:
+            return "⚠️ No se envió ningún archivo ZIP."
 
-        files = request.files.getlist("files")
-        imagenes = []
+        file = request.files["file"]
+        if not file.filename.endswith(".zip"):
+            return "⚠️ Solo se aceptan archivos ZIP."
 
-        for file in files:
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-                file.save(filepath)
-                imagenes.append(filepath)
+        # Crear carpetas temporales
+        temp_input = tempfile.mkdtemp()
+        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "augmented")
+        os.makedirs(temp_output, exist_ok=True)
 
-        # Generar dataset aumentado → devuelve lista [(nombre, ruta)] o zip
-        resultados = augmentar_imagenes(imagenes, app.config["RESULTS_FOLDER"])
+        # Guardar y descomprimir el ZIP
+        zip_path = os.path.join(temp_input, "dataset.zip")
+        file.save(zip_path)
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(temp_input)
 
-        # 🔹 Si querés devolver un ZIP para descargar
-        # return send_file(resultados, as_attachment=True, download_name="dataset_aumentado.zip")
+        # Ejecutar augmentación
+        from augmentation import augment_dataset
+        procesados = augment_dataset(temp_input, temp_output)
 
-        # 🔹 Si preferís mostrar una galería en la web:
-        return render_template("augment_resultados.html", resultados=resultados)
+        # Crear ZIP de salida
+        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_augmented.zip")
+        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
+
+        return render_template("augment_resultados.html",
+                               procesados=procesados,
+                               zip_path="static/results/dataset_augmented.zip")
 
     return render_template("augment.html")
 

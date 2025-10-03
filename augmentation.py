@@ -50,7 +50,11 @@ def resize_image(img, scale=0.3):
     new_size = (int(img.width * scale), int(img.height * scale))
     return img.resize(new_size, Image.LANCZOS)
 
-def resize_dataset(input_dir, output_dir, scale=0.3):
+def augment_dataset(input_dir, output_dir):
+    """
+    Recorre un dataset (con subdirectorios), aplica augmentations y guarda
+    las imágenes resultantes en la misma estructura de subdirectorios.
+    """
     procesados = []
     for root, _, files in os.walk(input_dir):
         rel_path = os.path.relpath(root, input_dir)
@@ -61,23 +65,24 @@ def resize_dataset(input_dir, output_dir, scale=0.3):
             in_path = os.path.join(root, file)
             try:
                 with Image.open(in_path) as img:
-                    # Redimensionar
-                    new_size = (int(img.width * scale), int(img.height * scale))
-                    img_resized = img.resize(new_size, Image.Resampling.LANCZOS)
+                    base = os.path.splitext(file)[0]
 
-                    # Definir extensión
-                    ext = os.path.splitext(file)[1].lower()
-                    file_base = os.path.splitext(file)[0]
+                    # 5 augmentations
+                    transformaciones = {
+                        "flip_h": img.transpose(Image.FLIP_LEFT_RIGHT),
+                        "flip_v": img.transpose(Image.FLIP_TOP_BOTTOM),
+                        "zoom1": zoom_image(img, 1.1),
+                        "zoom2": zoom_image(img, 1.3),
+                        "zoom3": zoom_image(img, 1.5)
+                    }
 
-                    if ext in [".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"]:
-                        out_path = os.path.join(out_dir, file)
-                        img_resized.save(out_path)
-                    else:
-                        out_path = os.path.join(out_dir, file_base + ".png")
-                        img_resized.save(out_path, format="PNG")
+                    for nombre, im in transformaciones.items():
+                        out_name = f"{base}_{nombre}_{uuid.uuid4().hex[:6]}.png"
+                        out_path = os.path.join(out_dir, out_name)
+                        im.save(out_path)
+                        procesados.append(out_path)
 
-                    print(f"Procesada: {in_path} -> {out_path}")
-                    procesados.append(out_path)
+                    print(f"Augmentada: {in_path} -> {out_dir}")
 
             except Exception as e:
                 print(f"Error con {in_path}: {e}")
