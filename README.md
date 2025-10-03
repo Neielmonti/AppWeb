@@ -10,7 +10,6 @@
 - python app.py
 
 ### Paso 3: Abra la direccion "http://127.0.0.1:5000" en su navegador
-o "http://127.0.0.1:5000/augmentar" para aumentar el dataset.
 
 ### Paso 4: App Web
 - http://127.0.0.1:5000 -> Para analisis de imagenes (1 o varias)
