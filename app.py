@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from analisis import analizar_imagen
 from augmentation import augmentar_imagenes
 import zipfile
+import cv2
 import uuid
 
 UPLOAD_FOLDER = "static/uploads"
@@ -181,6 +182,48 @@ def estandarizar():
                                zip_path="static/results/dataset_estandarizadas.zip")
 
     return render_template("estandarizar.html")
+
+@app.route("/detectar_enfermedad", methods=["GET", "POST"])
+def detectar_enfermedad():
+    if request.method == "POST":
+        if "file" not in request.files:
+            return "⚠️ No se envió ningún archivo de imagen."
+
+        file = request.files["file"]
+        if file.filename == "":
+            return "⚠️ No se seleccionó ningún archivo."
+
+        from estandarizar_tamano import estandarizar_imagen
+        from exageracion_hsv import exagerar_imagen, procesar_iluminacion
+
+        # --- Guardar imagen subida ---
+        filename = secure_filename(file.filename)
+        input_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(input_path)
+
+        # --- Leer imagen original ---
+        img = cv2.imread(input_path)
+        if img is None:
+            return "❌ Error al leer la imagen. Asegúrate de subir un archivo válido."
+
+        # --- Corregir iluminación (solo para imágenes nuevas) ---
+        img_corr = procesar_iluminacion(img)
+        corrected_path = os.path.join(app.config["RESULTS_FOLDER"], f"corr_{filename}")
+        cv2.imwrite(corrected_path, img_corr)
+
+        # --- Estandarizar tamaño ---
+        standardized_path = os.path.join(app.config["RESULTS_FOLDER"], f"std_{filename}")
+        estandarizar_imagen(corrected_path, standardized_path)
+
+        # --- Exagerar colores ---
+        exaggerated_path = os.path.join(app.config["RESULTS_FOLDER"], f"exag_{filename}")
+        exagerar_imagen(standardized_path, exaggerated_path)
+
+        # --- Mostrar resultado ---
+        return render_template("detectar_resultado.html", filename=f"exag_{filename}")
+
+    # GET: mostrar formulario
+    return render_template("detectar_enfermedad.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
