@@ -120,5 +120,67 @@ def resize():
 
     return render_template("resize.html")
 
+@app.route("/exagerar", methods=["GET", "POST"])
+def exagerar():
+    if request.method == "POST":
+        if "file" not in request.files:
+            return "⚠️ No se envió ningún archivo ZIP."
+
+        file = request.files["file"]
+        if not file.filename.endswith(".zip"):
+            return "⚠️ Solo se aceptan archivos ZIP."
+
+        temp_input = tempfile.mkdtemp()
+        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "exageradas")
+        os.makedirs(temp_output, exist_ok=True)
+
+        zip_path = os.path.join(temp_input, "dataset.zip")
+        file.save(zip_path)
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(temp_input)
+
+        from exageracion_hsv import exagerar_dataset
+        procesadas = exagerar_dataset(temp_input, temp_output)
+
+        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_exageradas.zip")
+        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
+
+        return render_template("exagerar_resultados.html",
+                               procesadas=procesadas,
+                               zip_path="static/results/dataset_exageradas.zip")
+
+    return render_template("exagerar.html")
+
+@app.route("/estandarizar", methods=["GET", "POST"])
+def estandarizar():
+    if request.method == "POST":
+        if "file" not in request.files:
+            return "⚠️ No se envió ningún archivo ZIP."
+
+        file = request.files["file"]
+        if not file.filename.endswith(".zip"):
+            return "⚠️ Solo se aceptan archivos ZIP."
+
+        temp_input = tempfile.mkdtemp()
+        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "estandarizadas")
+        os.makedirs(temp_output, exist_ok=True)
+
+        zip_path = os.path.join(temp_input, "dataset.zip")
+        file.save(zip_path)
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(temp_input)
+
+        from estandarizar_tamano import estandarizar_dataset
+        procesadas = estandarizar_dataset(temp_input, temp_output)
+
+        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_estandarizadas.zip")
+        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
+
+        return render_template("estandarizar_resultados.html",
+                               procesadas=procesadas,
+                               zip_path="static/results/dataset_estandarizadas.zip")
+
+    return render_template("estandarizar.html")
+
 if __name__ == "__main__":
     app.run(debug=True)

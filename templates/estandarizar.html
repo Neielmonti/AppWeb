@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Estandarizar Tamaño</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+    h1 { color: #1565c0; }
+    form { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); max-width: 500px; }
+    input[type="file"] { margin-bottom: 10px; }
+    button { padding: 8px 16px; background: #1565c0; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #0d47a1; }
+  </style>
+</head>
+<body>
+  <h1>Estandarizar tamaño de imágenes</h1>
+  <form method="POST" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".zip" required><br>
+    <button type="submit">Procesar</button>
+  </form>
+</body>
+</html>

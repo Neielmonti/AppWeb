@@ -2,3 +2,4 @@ flask
 numpy
 pillow
 matplotlib
+opencv-python

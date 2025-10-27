@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Resultados - Exageración HSV</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; }
+    h1 { color: #2e7d32; }
+    a { color: #1b5e20; text-decoration: none; font-weight: bold; }
+    a:hover { text-decoration: underline; }
+    ul { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); max-width: 600px; }
+    li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <h1>✅ Imágenes procesadas</h1>
+  <p>Se procesaron {{ procesadas|length }} imágenes.</p>
+  <p><a href="{{ url_for('static', filename='results/dataset_exageradas.zip') }}" download>📦 Descargar resultados (ZIP)</a></p>
+  <ul>
+    {% for img in procesadas %}
+      <li>{{ img }}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

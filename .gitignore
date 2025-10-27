@@ -3,3 +3,6 @@
 
 \static\results
 \static\uploads
+
+/venv
+\venv
