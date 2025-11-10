@@ -185,6 +185,10 @@ def estandarizar():
 
 @app.route("/detectar_enfermedad", methods=["GET", "POST"])
 def detectar_enfermedad():
+    import tensorflow as tf
+    import numpy as np
+    import json
+
     if request.method == "POST":
         if "file" not in request.files:
             return "⚠️ No se envió ningún archivo de imagen."
@@ -206,7 +210,7 @@ def detectar_enfermedad():
         if img is None:
             return "❌ Error al leer la imagen. Asegúrate de subir un archivo válido."
 
-        # --- Corregir iluminación (solo para imágenes nuevas) ---
+        # --- Corregir iluminación ---
         img_corr = procesar_iluminacion(img)
         corrected_path = os.path.join(app.config["RESULTS_FOLDER"], f"corr_{filename}")
         cv2.imwrite(corrected_path, img_corr)
@@ -219,8 +223,40 @@ def detectar_enfermedad():
         exaggerated_path = os.path.join(app.config["RESULTS_FOLDER"], f"exag_{filename}")
         exagerar_imagen(standardized_path, exaggerated_path)
 
+        # =============================
+        # 🧠 PREDICCIÓN CON EL MODELO
+        # =============================
+        MODEL_PATH = r"modelo_soybean.h5"
+        CLASSES_JSON = r"clases_soybean.json"
+
+        # Cargar modelo
+        model = tf.keras.models.load_model(MODEL_PATH)
+
+        # Cargar clases desde JSON
+        try:
+            with open(CLASSES_JSON, "r", encoding="utf-8") as f:
+                class_names = json.load(f)
+        except Exception as e:
+            return f"❌ Error al cargar clases: {e}"
+
+        # Preprocesar imagen igual que en entrenamiento
+        img = tf.keras.utils.load_img(exaggerated_path, target_size=(640,360))
+        img_array = tf.keras.utils.img_to_array(img)
+        img_array = np.expand_dims(img_array, 0) / 255.0  # normalización
+
+        # Hacer predicción
+        predictions = model.predict(img_array)
+        pred_idx = np.argmax(predictions[0])
+        pred_class = class_names[pred_idx]
+        pred_conf = float(np.max(predictions[0]) * 100)
+
         # --- Mostrar resultado ---
-        return render_template("detectar_resultado.html", filename=f"exag_{filename}")
+        return render_template(
+            "detectar_resultado.html",
+            filename=f"exag_{filename}",
+            pred_class=pred_class,
+            pred_conf=round(pred_conf, 2)
+        )
 
     # GET: mostrar formulario
     return render_template("detectar_enfermedad.html")

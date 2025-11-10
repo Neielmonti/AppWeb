@@ -1,19 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>Resultado del Procesamiento</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; background: #f5f5f5; text-align: center; }
-    h1 { color: #2e7d32; }
-    img { max-width: 60%; height: auto; border: 2px solid #ccc; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-    a { display: inline-block; margin-top: 20px; padding: 8px 16px; background: #2e7d32; color: white; text-decoration: none; border-radius: 4px; }
-    a:hover { background: #1b5e20; }
-  </style>
+<meta charset="UTF-8">
+<title>Resultado de detección</title>
+<style>
+body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background: #f5f5f5; }
+img { max-width: 400px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); margin: 20px; }
+.result { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+button, a { text-decoration: none; color: white; background: #4CAF50; padding: 10px 20px; border-radius: 5px; margin-top: 20px; display: inline-block; }
+button:hover, a:hover { background: #45a049; }
+</style>
 </head>
 <body>
-  <h1>Imagen procesada</h1>
-  <img src="{{ url_for('static', filename='results/' + filename) }}" alt="Resultado"><br>
-  <a href="{{ url_for('detectar_enfermedad') }}">Procesar otra imagen</a>
+<h1>🩺 Resultado del Análisis</h1>
+
+<div class="result">
+    <img src="{{ url_for('static', filename='results/' + filename) }}" alt="Imagen procesada">
+    <h2>Predicción: {{ pred_class }}</h2>
+    <p>Confianza: {{ pred_conf }}%</p>
+</div>
+
+<a href="/detectar_enfermedad">🔄 Analizar otra imagen</a>
+<a href="/">🏠 Volver al inicio</a>
 </body>
 </html>

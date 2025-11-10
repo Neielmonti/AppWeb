@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 # 1️⃣ CONFIGURACIÓN DE RUTAS
 # =====================================
 # ⚠️ CAMBIÁ ESTA RUTA a donde está tu carpeta "soybean"
-BASE_PATH = r"D:\Facultad\5to anio\Segundo cuatrimestre\Procesamiento de imagenes\MODELO\exageradas\dataset_augmented-001\soybean"  # ⬅️ ejemplo Windows
+BASE_PATH = r"/home/kmonti/Desktop/exagerada(640x360)/dataset_augmented-001/soybean"  # ⬅️ ejemplo Windows
 
 # Carpeta donde se crearán los splits
 SPLIT_PATH = os.path.join(os.path.dirname(BASE_PATH), "soybean_splits")
@@ -23,7 +23,7 @@ TEST_PATH = os.path.join(SPLIT_PATH, "test")
 # Parámetros
 TEST_SIZE = 0.2
 RANDOM_STATE = 42
-IMG_HEIGHT, IMG_WIDTH = 180, 180
+IMG_HEIGHT, IMG_WIDTH = 1920, 1080
 BATCH_SIZE = 16
 EPOCHS = 15
 
