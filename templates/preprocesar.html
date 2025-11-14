@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Preprocesar Dataset</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        p {
+            color: #666;
+            text-align: center;
+        }
+
+        .upload-box {
+            margin-top: 25px;
+            padding: 25px;
+            border: 2px dashed #777;
+            text-align: center;
+            border-radius: 10px;
+            background: #fafafa;
+            transition: 0.3s;
+        }
+
+        .upload-box:hover {
+            background: #f0f0f0;
+            border-color: #444;
+        }
+
+        input[type="file"] {
+            margin-top: 15px;
+            cursor: pointer;
+        }
+
+        button {
+            margin-top: 25px;
+            width: 100%;
+            background: #0066ff;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: #004ccc;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-align: center;
+            text-decoration: none;
+            color: #555;
+        }
+
+        .back-link:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Preprocesar Dataset Completo</h1>
+    <p>
+        Subí un archivo ZIP con tu dataset original.  
+        El sistema aplicará automáticamente:
+        <br><br>
+        <b>✔ Corrección de iluminación</b><br>
+        <b>✔ Estandarización a 640×360</b><br>
+        <b>✔ Exageración HSV</b><br>
+        <b>✔ Augmentaciones (flips + zooms)</b>
+        <br><br>
+        Y generará un ZIP final listo para entrenar el modelo.
+    </p>
+
+    <form method="POST" enctype="multipart/form-data" class="upload-box">
+        <label><b>Seleccioná el ZIP del dataset:</b></label><br>
+        <input type="file" name="file" accept=".zip" required>
+        <br>
+        <button type="submit">Procesar Dataset</button>
+    </form>
+
+    <a href="/" class="back-link">⬅ Volver al inicio</a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dataset Preprocesado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef1f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 60px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        a.download {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 12px 20px;
+            background: #0066ff;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 17px;
+            transition: 0.3s;
+        }
+
+        a.download:hover {
+            background: #004ccc;
+        }
+
+        a.back {
+            display: block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #444;
+        }
+
+        a.back:hover {
+            color: black;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Dataset Preprocesado Correctamente</h1>
+    <p>Tu dataset ya está listo para entrenar el modelo 🎉</p>
+
+    <a class="download" href="{{ zip_path }}" download>📦 Descargar ZIP</a>
+
+    <a class="back" href="/preprocesar">⬅ Procesar otro dataset</a>
+    <a class="back" href="/">🏡 Volver al inicio</a>
+</div>
+
+</body>
+</html>

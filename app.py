@@ -183,11 +183,72 @@ def estandarizar():
 
     return render_template("estandarizar.html")
 
+@app.route("/preprocesar", methods=["GET", "POST"])
+def preprocesar():
+    if request.method == "POST":
+        if "file" not in request.files:
+            return "⚠️ No se envió ningún archivo ZIP."
+
+        file = request.files["file"]
+        if not file.filename.endswith(".zip"):
+            return "⚠️ Solo se aceptan archivos ZIP."
+
+        import zipfile
+        import tempfile
+        import shutil
+        from pipeline import procesar_imagen_pipeline
+        from augmentation import augmentar_imagenes
+
+        # carpetas temporales
+        temp_input = tempfile.mkdtemp()
+        temp_preproc = tempfile.mkdtemp()
+        temp_aug = tempfile.mkdtemp()
+
+        # guardar zip
+        zip_path = os.path.join(temp_input, "dataset.zip")
+        file.save(zip_path)
+
+        # extraer
+        with zipfile.ZipFile(zip_path, "r") as zip_ref:
+            zip_ref.extractall(temp_input)
+
+        # === 1) preprocesamiento ===
+        rutas_procesadas = []
+        for root, _, files in os.walk(temp_input):
+            for f in files:
+                ruta_abs = os.path.join(root, f)
+                rel = os.path.relpath(ruta_abs, temp_input)
+
+                if not f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tif")):
+                    continue
+
+                out_path = os.path.join(temp_preproc, rel)
+                os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+                out_path = out_path.rsplit(".", 1)[0] + "_proc.png"
+                procesar_imagen_pipeline(ruta_abs, out_path)
+                rutas_procesadas.append(out_path)
+
+        # === 2) augmentación ===
+        augmentar_imagenes(rutas_procesadas, temp_aug)
+
+        # === 3) crear ZIP final ===
+        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_preprocesado.zip")
+        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_aug)
+
+        return render_template("preprocesar_resultados.html",
+                               zip_path="static/results/dataset_preprocesado.zip")
+
+    return render_template("preprocesar.html")
+    
 @app.route("/detectar_enfermedad", methods=["GET", "POST"])
 def detectar_enfermedad():
     import tensorflow as tf
     import numpy as np
     import json
+    import uuid
+    from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+    from pipeline import procesar_imagen_pipeline
 
     if request.method == "POST":
         if "file" not in request.files:
@@ -197,68 +258,78 @@ def detectar_enfermedad():
         if file.filename == "":
             return "⚠️ No se seleccionó ningún archivo."
 
-        from estandarizar_tamano import estandarizar_imagen
-        from exageracion_hsv import exagerar_imagen, procesar_iluminacion
-
-        # --- Guardar imagen subida ---
+        # -------------------------
+        # 1️⃣ GUARDAR IMAGEN RAW
+        # -------------------------
         filename = secure_filename(file.filename)
-        input_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(input_path)
+        raw_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(raw_path)
 
-        # --- Leer imagen original ---
-        img = cv2.imread(input_path)
-        if img is None:
-            return "❌ Error al leer la imagen. Asegúrate de subir un archivo válido."
+        # -------------------------
+        # 2️⃣ APLICAR PIPELINE COMPLETO
+        #    (igual que el dataset)
+        # -------------------------
+        proc_name = f"{uuid.uuid4().hex}_proc.png"
+        proc_path = os.path.join(app.config["RESULTS_FOLDER"], proc_name)
 
-        # --- Corregir iluminación ---
-        img_corr = procesar_iluminacion(img)
-        corrected_path = os.path.join(app.config["RESULTS_FOLDER"], f"corr_{filename}")
-        cv2.imwrite(corrected_path, img_corr)
+        ok = procesar_imagen_pipeline(raw_path, proc_path)
+        if not ok:
+            return "❌ Error procesando la imagen."
 
-        # --- Estandarizar tamaño ---
-        standardized_path = os.path.join(app.config["RESULTS_FOLDER"], f"std_{filename}")
-        estandarizar_imagen(corrected_path, standardized_path)
-
-        # --- Exagerar colores ---
-        exaggerated_path = os.path.join(app.config["RESULTS_FOLDER"], f"exag_{filename}")
-        exagerar_imagen(standardized_path, exaggerated_path)
-
-        # =============================
-        # 🧠 PREDICCIÓN CON EL MODELO
-        # =============================
-        MODEL_PATH = r"modelo_soybean.h5"
+        # -------------------------
+        # 3️⃣ CARGAR MODELO Y CLASES
+        # -------------------------
+        MODEL_PATH = r"modelo_soybean.keras"
         CLASSES_JSON = r"clases_soybean.json"
 
-        # Cargar modelo
-        model = tf.keras.models.load_model(MODEL_PATH)
+        try:
+            model = tf.keras.models.load_model(MODEL_PATH)
+        except Exception as e:
+            return f"❌ Error cargando el modelo: {e}"
 
-        # Cargar clases desde JSON
         try:
             with open(CLASSES_JSON, "r", encoding="utf-8") as f:
                 class_names = json.load(f)
         except Exception as e:
-            return f"❌ Error al cargar clases: {e}"
+            return f"❌ Error cargando clases: {e}"
 
-        # Preprocesar imagen igual que en entrenamiento
-        img = tf.keras.utils.load_img(exaggerated_path, target_size=(640,360))
-        img_array = tf.keras.utils.img_to_array(img)
-        img_array = np.expand_dims(img_array, 0) / 255.0  # normalización
+        # -------------------------
+        # 4️⃣ PREPROCESAR PARA MOBILENET
+        # -------------------------
+        IMG_HEIGHT = 224
+        IMG_WIDTH = 224
 
-        # Hacer predicción
-        predictions = model.predict(img_array)
-        pred_idx = np.argmax(predictions[0])
+        try:
+            img = tf.keras.utils.load_img(proc_path, target_size=(IMG_HEIGHT, IMG_WIDTH))
+            img_array = tf.keras.utils.img_to_array(img)
+            img_array = np.expand_dims(img_array, axis=0)
+            img_array = preprocess_input(img_array)
+        except Exception as e:
+            return f"❌ Error preparando la imagen para el modelo: {e}"
+
+        # -------------------------
+        # 5️⃣ PREDICCIÓN
+        # -------------------------
+        try:
+            predictions = model.predict(img_array)
+        except Exception as e:
+            return f"❌ Error durante la predicción: {e}"
+
+        pred_idx = int(np.argmax(predictions[0]))
         pred_class = class_names[pred_idx]
         pred_conf = float(np.max(predictions[0]) * 100)
 
-        # --- Mostrar resultado ---
+        # -------------------------
+        # 6️⃣ MOSTRAR RESULTADO
+        # -------------------------
         return render_template(
             "detectar_resultado.html",
-            filename=f"exag_{filename}",
+            filename=proc_name,   # muestra la imagen procesada final
             pred_class=pred_class,
             pred_conf=round(pred_conf, 2)
         )
 
-    # GET: mostrar formulario
+    # GET → mostrar formulario
     return render_template("detectar_enfermedad.html")
 
 if __name__ == "__main__":

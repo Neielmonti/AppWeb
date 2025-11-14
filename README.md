@@ -2,8 +2,8 @@
 
 ### Paso 1: Instale los requerimientos
 - python3 -m venv venv
-- source venv/bin/activate   # en Linux/Mac
-- venv\Scripts\activate      # en Windows
+- source venv/bin/activate          # en Linux/Mac
+- source venv\Scripts\activate      # en Windows
 - pip install -r requirements.txt
 
 ### Paso 2: Corra el servidor
