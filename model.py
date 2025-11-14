@@ -19,7 +19,7 @@ from datetime import datetime
 # =====================================
 # 1️⃣ CONFIGURACIÓN
 # =====================================
-BASE_PATH = r"C:\Users\neiel\OneDrive\Desktop\exagerada(640x360)\dataset_augmented-001\soybean"
+BASE_PATH = r"/home/kmonti/Desktop/PRUEBA"
 
 SPLIT_PATH = os.path.join(os.path.dirname(BASE_PATH), "soybean_splits")
 TRAIN_PATH = os.path.join(SPLIT_PATH, "train")
@@ -30,8 +30,8 @@ TEST_SIZE = 0.2
 RANDOM_STATE = 42
 IMG_HEIGHT, IMG_WIDTH = 224, 224   # 👈 Importante: tamaño que espera ImageNet
 BATCH_SIZE = 16
-EPOCHS = 30
-LEARNING_RATE = 0.0001  # 👈 más bajo para transfer learning
+EPOCHS = 70
+LEARNING_RATE = 0.00001  # 👈 más bajo para transfer learning
 
 # =====================================
 # 2️⃣ FUNCIONES AUXILIARES
@@ -103,9 +103,15 @@ def entrenar_modelo():
 
     # 🔹 Cargar modelo base preentrenado (sin la parte final)
     base_model = tf.keras.applications.MobileNetV2(
-        input_shape=(IMG_HEIGHT, IMG_WIDTH, 3),
+        input_shape=None,
+        alpha=1.0,
         include_top=False,
-        weights='imagenet'
+        weights="imagenet",
+        input_tensor=None,
+        pooling=None,
+        classes=1000,
+        classifier_activation="softmax",
+        name=None,
     )
     base_model.trainable = False  # 👈 Congelamos pesos
 

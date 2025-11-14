@@ -8,6 +8,7 @@ from augmentation import augmentar_imagenes
 import zipfile
 import cv2
 import uuid
+from flask import Flask, render_template, request, send_from_directory, redirect
 
 UPLOAD_FOLDER = "static/uploads"
 RESULTS_FOLDER = "static/results"
@@ -197,7 +198,7 @@ def preprocesar():
         import tempfile
         import shutil
         from pipeline import procesar_imagen_pipeline
-        from augmentation import augmentar_imagenes
+        from augmentation import augment_dataset
 
         # carpetas temporales
         temp_input = tempfile.mkdtemp()
@@ -213,34 +214,45 @@ def preprocesar():
             zip_ref.extractall(temp_input)
 
         # === 1) preprocesamiento ===
-        rutas_procesadas = []
         for root, _, files in os.walk(temp_input):
             for f in files:
-                ruta_abs = os.path.join(root, f)
-                rel = os.path.relpath(ruta_abs, temp_input)
-
                 if not f.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tif")):
                     continue
+
+                ruta_abs = os.path.join(root, f)
+                rel = os.path.relpath(ruta_abs, temp_input)
 
                 out_path = os.path.join(temp_preproc, rel)
                 os.makedirs(os.path.dirname(out_path), exist_ok=True)
 
                 out_path = out_path.rsplit(".", 1)[0] + "_proc.png"
                 procesar_imagen_pipeline(ruta_abs, out_path)
-                rutas_procesadas.append(out_path)
 
-        # === 2) augmentación ===
-        augmentar_imagenes(rutas_procesadas, temp_aug)
+        # === 2) augmentación (mantiene carpetas) ===
+        augment_dataset(temp_preproc, temp_aug)
 
         # === 3) crear ZIP final ===
-        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_preprocesado.zip")
-        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_aug)
+        output_base = os.path.join(app.config["RESULTS_FOLDER"], "dataset_preprocesado")
+        shutil.make_archive(output_base, "zip", temp_aug)
+        output_zip = output_base + ".zip"
 
-        return render_template("preprocesar_resultados.html",
-                               zip_path="static/results/dataset_preprocesado.zip")
+        # === 4) mostrar template de resultado ===
+        return render_template(
+            "preprocesar_resultados.html",
+            zip_filename=os.path.basename(output_zip)
+        )
 
     return render_template("preprocesar.html")
-    
+
+@app.route("/download/<filename>")
+def download_file(filename):
+    return send_from_directory(
+        app.config["RESULTS_FOLDER"],
+        filename,
+        as_attachment=True,
+        mimetype="application/zip"
+    )
+
 @app.route("/detectar_enfermedad", methods=["GET", "POST"])
 def detectar_enfermedad():
     import tensorflow as tf

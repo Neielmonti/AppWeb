@@ -1,0 +1,2 @@
+fecha,modelo,learning_rate,batch_size,epochs,accuracy,f1_macro,modelo_path,conf_matrix
+20251114_150911,MobileNetV2,1e-05,16,70,0.8131313323974609,0.8094954654609104,modelo_soybean_imagenet_20251114_150911.h5,confusion_matrix_20251114_150911.png
