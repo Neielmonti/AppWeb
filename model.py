@@ -94,6 +94,7 @@ def crear_splits():
     print("\n✅ División completa.\n")
     return clases
 
+"""
 # === Callbacks simples y potentes ===
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 
@@ -120,6 +121,7 @@ callbacks = [
         verbose=1
     )
 ]
+"""
 
 # =====================================
 # 3️⃣ ENTRENAMIENTO CON TRANSFER LEARNING
@@ -191,13 +193,15 @@ def entrenar_modelo():
     for w in base_model.get_weights()[:5]:
         print(w.std())
 
-    #history = model.fit(train_ds, validation_data=test_ds, epochs=EPOCHS)
-    history = model.fit(
+    history = model.fit(train_ds, validation_data=test_ds, epochs=EPOCHS)
+    """
+        history = model.fit(
         train_ds,
         validation_data=test_ds,
         epochs=EPOCHS,
         callbacks=callbacks
     )
+    """
 
     test_loss, test_acc = model.evaluate(test_ds)
     print(f"\n📊 Exactitud global: {test_acc:.3f}")
