@@ -1,14 +1,25 @@
-from flask import Flask, render_template, request, send_file
+import json
 import os
-import tempfile
 import shutil
+import tempfile
+import uuid
+import zipfile
+import cv2
+import numpy as np
+import tensorflow as tf
+from flask import (
+    Flask, 
+    render_template, 
+    request, 
+    redirect, 
+    send_file,
+    send_from_directory
+)
+from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 from werkzeug.utils import secure_filename
 from analisis import analizar_imagen
 from augmentation import augmentar_imagenes
-import zipfile
-import cv2
-import uuid
-from flask import Flask, render_template, request, send_from_directory, redirect
+from pipeline import procesar_imagen_pipeline
 
 UPLOAD_FOLDER = "static/uploads"
 RESULTS_FOLDER = "static/results"
@@ -20,6 +31,25 @@ app.config["RESULTS_FOLDER"] = RESULTS_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
+
+# =========================================================
+# 🚀 CARGA GLOBAL (se ejecuta 1 sola vez al iniciar)
+# =========================================================
+print("Cargando modelo de Keras y clases...")
+
+MODEL_PATH = r"modelo_soybean.keras"
+CLASSES_JSON = r"clases_soybean.json"
+
+try:
+    model = tf.keras.models.load_model(MODEL_PATH)
+    with open(CLASSES_JSON, "r", encoding="utf-8") as f:
+        class_names = json.load(f)
+    print("✅ Modelo y clases cargados exitosamente.")
+except Exception as e:
+    print(f"❌ ERROR FATAL: No se pudo cargar el modelo o las clases: {e}")
+    # En un escenario real, quizás quieras que la app falle si no puede cargar
+    model = None
+    class_names = []
 
 
 def allowed_file(filename):
@@ -255,14 +285,11 @@ def download_file(filename):
 
 @app.route("/detectar_enfermedad", methods=["GET", "POST"])
 def detectar_enfermedad():
-    import tensorflow as tf
-    import numpy as np
-    import json
-    import uuid
-    from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-    from pipeline import procesar_imagen_pipeline
-
     if request.method == "POST":
+
+        # -------------------------
+        # 1️⃣ VALIDAR Y GUARDAR IMAGEN RAW (¡ESTE CÓDIGO FALTABA!)
+        # -------------------------
         if "file" not in request.files:
             return "⚠️ No se envió ningún archivo de imagen."
 
@@ -270,52 +297,50 @@ def detectar_enfermedad():
         if file.filename == "":
             return "⚠️ No se seleccionó ningún archivo."
 
-        # -------------------------
-        # 1️⃣ GUARDAR IMAGEN RAW
-        # -------------------------
+        if not (file and allowed_file(file.filename)):
+            return "⚠️ Tipo de archivo no permitido."
+
+        # Guardar la imagen original
         filename = secure_filename(file.filename)
         raw_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(raw_path)
 
         # -------------------------
-        # 2️⃣ APLICAR PIPELINE COMPLETO
-        #    (igual que el dataset)
+        # 2️⃣ APLICAR PIPELINE COMPLETO (¡ESTE CÓDIGO FALTABA!)
         # -------------------------
+        # Aquí es donde se definen las variables 'proc_name' y 'proc_path'
         proc_name = f"{uuid.uuid4().hex}_proc.png"
         proc_path = os.path.join(app.config["RESULTS_FOLDER"], proc_name)
 
-        ok = procesar_imagen_pipeline(raw_path, proc_path)
-        if not ok:
-            return "❌ Error procesando la imagen."
-
-        # -------------------------
-        # 3️⃣ CARGAR MODELO Y CLASES
-        # -------------------------
-        MODEL_PATH = r"modelo_soybean.keras"
-        CLASSES_JSON = r"clases_soybean.json"
-
         try:
-            model = tf.keras.models.load_model(MODEL_PATH)
+            # Llama a tu pipeline de CV (segmentación, etc.)
+            ok = procesar_imagen_pipeline(raw_path, proc_path)
+            if not ok:
+                return "❌ Error procesando la imagen con el pipeline."
         except Exception as e:
-            return f"❌ Error cargando el modelo: {e}"
+            return f"❌ Error en pipeline de imagen: {e}"
 
-        try:
-            with open(CLASSES_JSON, "r", encoding="utf-8") as f:
-                class_names = json.load(f)
-        except Exception as e:
-            return f"❌ Error cargando clases: {e}"
 
         # -------------------------
-        # 4️⃣ PREPROCESAR PARA MOBILENET
+        # 3️⃣ VERIFICAR MODELO GLOBAL
+        # -------------------------
+        if model is None:
+            return "❌ Error fatal: El modelo no está cargado en el servidor."
+
+        # -------------------------
+        # 4️⃣ PREPARAR IMAGEN PARA EL MODELO
         # -------------------------
         IMG_HEIGHT = 224
         IMG_WIDTH = 224
-
         try:
+            # ¡Ahora 'proc_path' SÍ existe y se puede usar aquí!
             img = tf.keras.utils.load_img(proc_path, target_size=(IMG_HEIGHT, IMG_WIDTH))
             img_array = tf.keras.utils.img_to_array(img)
             img_array = np.expand_dims(img_array, axis=0)
-            img_array = preprocess_input(img_array)
+            
+            # La línea de 'preprocess_input' está correctamente eliminada
+            # (tal como lo hiciste en tu último código)
+            
         except Exception as e:
             return f"❌ Error preparando la imagen para el modelo: {e}"
 
@@ -323,20 +348,21 @@ def detectar_enfermedad():
         # 5️⃣ PREDICCIÓN
         # -------------------------
         try:
-            predictions = model.predict(img_array)
+            # El modelo recibe [0, 255] y él mismo lo procesa por dentro
+            predictions = model.predict(img_array) 
         except Exception as e:
             return f"❌ Error durante la predicción: {e}"
-
-        pred_idx = int(np.argmax(predictions[0]))
-        pred_class = class_names[pred_idx]
-        pred_conf = float(np.max(predictions[0]) * 100)
 
         # -------------------------
         # 6️⃣ MOSTRAR RESULTADO
         # -------------------------
+        pred_idx = int(np.argmax(predictions[0])) 
+        pred_class = class_names[pred_idx]
+        pred_conf = float(np.max(predictions[0]) * 100)
+
         return render_template(
             "detectar_resultado.html",
-            filename=proc_name,   # muestra la imagen procesada final
+            filename=proc_name, # ¡'proc_name' también existe ahora!
             pred_class=pred_class,
             pred_conf=round(pred_conf, 2)
         )

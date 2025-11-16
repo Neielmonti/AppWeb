@@ -19,7 +19,7 @@ from datetime import datetime
 # =====================================
 # 1️⃣ CONFIGURACIÓN
 # =====================================
-BASE_PATH = r"/home/kmonti/Desktop/PRUEBA"
+BASE_PATH = r"C:\Users\neiel\OneDrive\Desktop\dataset_preprocesado"
 
 SPLIT_PATH = os.path.join(os.path.dirname(BASE_PATH), "soybean_splits")
 TRAIN_PATH = os.path.join(SPLIT_PATH, "train")
@@ -28,10 +28,10 @@ RESULTS_LOG = os.path.join(SPLIT_PATH, "resultados_modelos.csv")
 
 TEST_SIZE = 0.2
 RANDOM_STATE = 42
-IMG_HEIGHT, IMG_WIDTH = 224, 224   # 👈 Importante: tamaño que espera ImageNet
+IMG_HEIGHT, IMG_WIDTH = 224, 224
 BATCH_SIZE = 16
 EPOCHS = 70
-LEARNING_RATE = 0.00001  # 👈 más bajo para transfer learning
+LEARNING_RATE = 0.00001
 
 # =====================================
 # 2️⃣ FUNCIONES AUXILIARES
@@ -39,6 +39,18 @@ LEARNING_RATE = 0.00001  # 👈 más bajo para transfer learning
 def force_remove_readonly(func, path, excinfo):
     os.chmod(path, stat.S_IWRITE)
     func(path)
+
+# 🔹 NUEVO ───────────────────────────────────────────────
+def es_imagen_valida(path):
+    """Devuelve True si la imagen puede cargarse, False si está corrupta."""
+    try:
+        img = tf.io.read_file(path)
+        _ = tf.image.decode_image(img)  # fuerza a TF a decodificar
+        return True
+    except Exception as e:
+        print(f"⚠️ Archivo corrupto ignorado: {path}")
+        return False
+# ─────────────────────────────────────────────────────────
 
 def crear_splits():
     print(f"\n📂 Leyendo clases desde: {BASE_PATH}")
@@ -59,19 +71,55 @@ def crear_splits():
 
     for class_name in clases:
         class_path = os.path.join(BASE_PATH, class_name)
-        images = [os.path.join(class_path, img)
-                  for img in os.listdir(class_path)
-                  if img.lower().endswith(('.jpg', '.jpeg', '.png'))]
+
+        # 🔹 NUEVO: filtro de imágenes corruptas
+        images = []
+        for img in os.listdir(class_path):
+            if img.lower().endswith(('.jpg', '.jpeg', '.png')):
+                full_path = os.path.join(class_path, img)
+                if es_imagen_valida(full_path):
+                    images.append(full_path)
+
         if not images:
             continue
+
         train_imgs, test_imgs = train_test_split(images, test_size=TEST_SIZE, random_state=RANDOM_STATE)
+
         for split, imgs in [('train', train_imgs), ('test', test_imgs)]:
             target_dir = os.path.join(SPLIT_PATH, split, class_name)
             os.makedirs(target_dir, exist_ok=True)
             for img in imgs:
                 shutil.copy(img, target_dir)
+
     print("\n✅ División completa.\n")
     return clases
+
+# === Callbacks simples y potentes ===
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+
+checkpoint_path = os.path.join(SPLIT_PATH, "best_model.keras")
+
+callbacks = [
+    ModelCheckpoint(
+        filepath=checkpoint_path,
+        monitor="val_loss",
+        save_best_only=True,
+        verbose=1
+    ),
+    ReduceLROnPlateau(
+        monitor="val_loss",
+        factor=0.2,
+        patience=3,
+        min_lr=1e-7,
+        verbose=1
+    ),
+    EarlyStopping(
+        monitor="val_loss",
+        patience=8,
+        restore_best_weights=True,
+        verbose=1
+    )
+]
 
 # =====================================
 # 3️⃣ ENTRENAMIENTO CON TRANSFER LEARNING
@@ -80,9 +128,17 @@ def entrenar_modelo():
     print("🚀 Iniciando entrenamiento con modelo preentrenado (ImageNet)...\n")
 
     train_ds = tf.keras.utils.image_dataset_from_directory(
-        TRAIN_PATH, image_size=(IMG_HEIGHT, IMG_WIDTH), batch_size=BATCH_SIZE)
+        TRAIN_PATH,
+        image_size=(IMG_HEIGHT, IMG_WIDTH),
+        batch_size=BATCH_SIZE
+    )
+
     test_ds = tf.keras.utils.image_dataset_from_directory(
-        TEST_PATH, image_size=(IMG_HEIGHT, IMG_WIDTH), batch_size=BATCH_SIZE, shuffle=False)
+        TEST_PATH,
+        image_size=(IMG_HEIGHT, IMG_WIDTH),
+        batch_size=BATCH_SIZE,
+        shuffle=False
+    )
 
     class_names = train_ds.class_names
     num_classes = len(class_names)
@@ -95,15 +151,16 @@ def entrenar_modelo():
     train_ds = train_ds.cache().shuffle(100).prefetch(buffer_size=AUTOTUNE)
     test_ds = test_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
+    """
     data_augmentation = tf.keras.Sequential([
         layers.RandomFlip("horizontal"),
         layers.RandomRotation(0.1),
         layers.RandomZoom(0.1),
     ])
+    """
 
-    # 🔹 Cargar modelo base preentrenado (sin la parte final)
     base_model = tf.keras.applications.MobileNetV2(
-        input_shape=None,
+        input_shape=(224, 224, 3),
         alpha=1.0,
         include_top=False,
         weights="imagenet",
@@ -113,12 +170,11 @@ def entrenar_modelo():
         classifier_activation="softmax",
         name=None,
     )
-    base_model.trainable = False  # 👈 Congelamos pesos
+    base_model.trainable = False
 
-    # 🔹 Armamos la red final encima del modelo base
     inputs = tf.keras.Input(shape=(IMG_HEIGHT, IMG_WIDTH, 3))
-    x = data_augmentation(inputs)
-    x = tf.keras.applications.mobilenet_v2.preprocess_input(x)
+    # x = data_augmentation(inputs)
+    x = tf.keras.applications.mobilenet_v2.preprocess_input(inputs)
     x = base_model(x, training=False)
     x = layers.GlobalAveragePooling2D()(x)
     x = layers.Dropout(0.3)(x)
@@ -130,21 +186,27 @@ def entrenar_modelo():
 
     model.summary()
 
-    # Entrenamiento
-    history = model.fit(train_ds, validation_data=test_ds, epochs=EPOCHS)
+    print("CANTIDAD DE PESOS GUARDADOS:", len(base_model.get_weights()))
+    print("Primeros 5 pesos (std):")
+    for w in base_model.get_weights()[:5]:
+        print(w.std())
+
+    #history = model.fit(train_ds, validation_data=test_ds, epochs=EPOCHS)
+    history = model.fit(
+        train_ds,
+        validation_data=test_ds,
+        epochs=EPOCHS,
+        callbacks=callbacks
+    )
 
     test_loss, test_acc = model.evaluate(test_ds)
     print(f"\n📊 Exactitud global: {test_acc:.3f}")
 
-    # Guardar modelo
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     model_name = f"modelo_soybean_imagenet_{timestamp}.h5"
     model_path = os.path.join(SPLIT_PATH, model_name)
     model.save(model_path.replace(".h5", ".keras"), save_format="keras")
 
-    # =====================================
-    # 🔍 EVALUACIÓN DETALLADA
-    # =====================================
     y_true = np.concatenate([y for _, y in test_ds], axis=0)
     y_pred_probs = model.predict(test_ds)
     y_pred = np.argmax(y_pred_probs, axis=1)
@@ -197,3 +259,4 @@ if __name__ == "__main__":
     crear_splits()
     entrenar_modelo()
     print("\n✅ Proceso completado correctamente.")
+
