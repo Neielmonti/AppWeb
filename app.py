@@ -32,8 +32,9 @@ app.config["RESULTS_FOLDER"] = RESULTS_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULTS_FOLDER, exist_ok=True)
 
+
 # =========================================================
-# 🚀 CARGA GLOBAL (se ejecuta 1 sola vez al iniciar)
+# CARGA GLOBAL
 # =========================================================
 print("Cargando modelo de Keras y clases...")
 
@@ -84,135 +85,6 @@ def index():
         return render_template("resultados.html", resultados=resultados)
 
     return render_template("index.html")
-
-@app.route("/augmentar", methods=["GET", "POST"])
-def augmentar():
-    if request.method == "POST":
-        if "file" not in request.files:
-            return "⚠️ No se envió ningún archivo ZIP."
-
-        file = request.files["file"]
-        if not file.filename.endswith(".zip"):
-            return "⚠️ Solo se aceptan archivos ZIP."
-
-        # Crear carpetas temporales
-        temp_input = tempfile.mkdtemp()
-        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "augmented")
-        os.makedirs(temp_output, exist_ok=True)
-
-        # Guardar y descomprimir el ZIP
-        zip_path = os.path.join(temp_input, "dataset.zip")
-        file.save(zip_path)
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(temp_input)
-
-        # Ejecutar augmentación
-        from augmentation import augment_dataset
-        procesados = augment_dataset(temp_input, temp_output)
-
-        # Crear ZIP de salida
-        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_augmented.zip")
-        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
-
-        return render_template("augment_resultados.html",
-                               procesados=procesados,
-                               zip_path="static/results/dataset_augmented.zip")
-
-    return render_template("augment.html")
-
-@app.route("/resize", methods=["GET", "POST"])
-def resize():
-    if request.method == "POST":
-        if "file" not in request.files:
-            return "⚠️ No se envió ningún archivo ZIP."
-
-        file = request.files["file"]
-        if not file.filename.endswith(".zip"):
-            return "⚠️ Solo se aceptan archivos ZIP."
-
-        temp_input = tempfile.mkdtemp()
-        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "resized")
-        os.makedirs(temp_output, exist_ok=True)
-
-        zip_path = os.path.join(temp_input, "dataset.zip")
-        file.save(zip_path)
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(temp_input)
-
-        from augmentation import resize_dataset
-        procesados = resize_dataset(temp_input, temp_output, scale=0.3)
-
-        # Crear ZIP
-        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_resized.zip")
-        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
-
-        return render_template("resize_resultados.html",
-                               procesados=procesados,
-                               zip_path="static/results/dataset_resized.zip")
-
-    return render_template("resize.html")
-
-@app.route("/exagerar", methods=["GET", "POST"])
-def exagerar():
-    if request.method == "POST":
-        if "file" not in request.files:
-            return "⚠️ No se envió ningún archivo ZIP."
-
-        file = request.files["file"]
-        if not file.filename.endswith(".zip"):
-            return "⚠️ Solo se aceptan archivos ZIP."
-
-        temp_input = tempfile.mkdtemp()
-        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "exageradas")
-        os.makedirs(temp_output, exist_ok=True)
-
-        zip_path = os.path.join(temp_input, "dataset.zip")
-        file.save(zip_path)
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(temp_input)
-
-        from exageracion_hsv import exagerar_dataset
-        procesadas = exagerar_dataset(temp_input, temp_output)
-
-        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_exageradas.zip")
-        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
-
-        return render_template("exagerar_resultados.html",
-                               procesadas=procesadas,
-                               zip_path="static/results/dataset_exageradas.zip")
-
-    return render_template("exagerar.html")
-
-@app.route("/estandarizar", methods=["GET", "POST"])
-def estandarizar():
-    if request.method == "POST":
-        if "file" not in request.files:
-            return "⚠️ No se envió ningún archivo ZIP."
-
-        file = request.files["file"]
-        if not file.filename.endswith(".zip"):
-            return "⚠️ Solo se aceptan archivos ZIP."
-
-        temp_input = tempfile.mkdtemp()
-        temp_output = os.path.join(app.config["RESULTS_FOLDER"], "estandarizadas")
-        os.makedirs(temp_output, exist_ok=True)
-
-        zip_path = os.path.join(temp_input, "dataset.zip")
-        file.save(zip_path)
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(temp_input)
-
-        from estandarizar_tamano import estandarizar_dataset
-        procesadas = estandarizar_dataset(temp_input, temp_output)
-
-        output_zip = os.path.join(app.config["RESULTS_FOLDER"], "dataset_estandarizadas.zip")
-        shutil.make_archive(output_zip.replace(".zip", ""), "zip", temp_output)
-
-        return render_template("estandarizar_resultados.html",
-                               procesadas=procesadas,
-                               zip_path="static/results/dataset_estandarizadas.zip")
-
-    return render_template("estandarizar.html")
 
 @app.route("/preprocesar", methods=["GET", "POST"])
 def preprocesar():
@@ -288,7 +160,7 @@ def detectar_enfermedad():
     if request.method == "POST":
 
         # -------------------------
-        # 1️⃣ VALIDAR Y GUARDAR IMAGEN RAW (¡ESTE CÓDIGO FALTABA!)
+        # 1: VALIDAR Y GUARDAR IMAGEN RAW (¡ESTE CÓDIGO FALTABA!)
         # -------------------------
         if "file" not in request.files:
             return "⚠️ No se envió ningún archivo de imagen."
@@ -306,7 +178,7 @@ def detectar_enfermedad():
         file.save(raw_path)
 
         # -------------------------
-        # 2️⃣ APLICAR PIPELINE COMPLETO (¡ESTE CÓDIGO FALTABA!)
+        # 2: APLICAR PIPELINE COMPLETO (¡ESTE CÓDIGO FALTABA!)
         # -------------------------
         # Aquí es donde se definen las variables 'proc_name' y 'proc_path'
         proc_name = f"{uuid.uuid4().hex}_proc.png"
@@ -322,13 +194,13 @@ def detectar_enfermedad():
 
 
         # -------------------------
-        # 3️⃣ VERIFICAR MODELO GLOBAL
+        # 3: VERIFICAR MODELO GLOBAL
         # -------------------------
         if model is None:
             return "❌ Error fatal: El modelo no está cargado en el servidor."
 
         # -------------------------
-        # 4️⃣ PREPARAR IMAGEN PARA EL MODELO
+        # 4: PREPARAR IMAGEN PARA EL MODELO
         # -------------------------
         IMG_HEIGHT = 224
         IMG_WIDTH = 224
@@ -345,7 +217,7 @@ def detectar_enfermedad():
             return f"❌ Error preparando la imagen para el modelo: {e}"
 
         # -------------------------
-        # 5️⃣ PREDICCIÓN
+        # 5: PREDICCIÓN
         # -------------------------
         try:
             # El modelo recibe [0, 255] y él mismo lo procesa por dentro
@@ -354,7 +226,7 @@ def detectar_enfermedad():
             return f"❌ Error durante la predicción: {e}"
 
         # -------------------------
-        # 6️⃣ MOSTRAR RESULTADO
+        # 6: MOSTRAR RESULTADO
         # -------------------------
         pred_idx = int(np.argmax(predictions[0])) 
         pred_class = class_names[pred_idx]
