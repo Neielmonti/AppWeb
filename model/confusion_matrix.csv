@@ -1,0 +1,10 @@
+,Septoria_Glycines,bacterial_blight,cercospora_leaf_blight,downey_mildew,frogeye,healthy,potassium_deficiency,soybean_rust,target_spot
+Septoria_Glycines,57,1,1,2,1,0,0,0,4
+bacterial_blight,3,50,2,0,1,0,0,10,0
+cercospora_leaf_blight,0,1,63,0,0,0,0,1,1
+downey_mildew,0,0,1,64,0,0,1,0,0
+frogeye,0,0,0,0,63,0,0,0,3
+healthy,0,0,1,3,3,57,1,0,1
+potassium_deficiency,0,0,0,0,0,0,66,0,0
+soybean_rust,1,8,0,0,0,0,0,57,0
+target_spot,0,1,0,1,0,2,0,2,60

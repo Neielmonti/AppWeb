@@ -6,3 +6,7 @@ opencv-python
 tensorflow==2.18.0
 scikit-learn
 seaborn
+dash
+plotly
+pandas
+python-dotenv

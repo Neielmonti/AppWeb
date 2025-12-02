@@ -1,26 +1,90 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Detección de enfermedad</title>
-<style>
-body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
-form { margin-top: 30px; }
-input[type=file] { margin: 10px; }
-button { padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
-button:hover { background: #45a049; }
-</style>
+    <meta charset="UTF-8">
+    <title>Detección de enfermedad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+            background: #f4f6f8;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        form {
+            margin-top: 30px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+        }
+
+        input[type=file] {
+            margin: 15px;
+            font-size: 15px;
+        }
+
+        button {
+            padding: 12px 25px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background: #43a047;
+        }
+
+        iframe {
+            border: none;
+            width: 100%;
+            max-width: 1100px;
+            height: 620px;
+            margin-top: 40px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+            background: white;
+        }
+
+        a {
+            display: block;
+            margin-top: 30px;
+            text-decoration: none;
+            color: #2980b9;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<h1>🌿 Detección de Enfermedad en Hojas de Soja</h1>
-<p>Subí una imagen de hoja para detectar su posible enfermedad.</p>
 
-<form action="/detectar_enfermedad" method="POST" enctype="multipart/form-data">
-    <input type="file" name="file" accept="image/*" required>
-    <br>
-    <button type="submit">Analizar</button>
-</form>
+    <h1>🌿 Detección de Enfermedad en Hojas de Soja</h1>
+    <p>Subí una imagen de hoja para detectar su posible enfermedad mediante IA.</p>
 
-<a href="/">⬅ Volver al inicio</a>
+    <form action="/detectar_enfermedad" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*" required>
+        <br>
+        <button type="submit">🔍 Analizar imagen</button>
+    </form>
+
+    <h2>📊 Métricas del modelo</h2>
+    <p>Visualización interactiva del desempeño del modelo de clasificación</p>
+
+    <!-- EMBEBIDO DASH -->
+    <iframe src="/dash/" title="Dashboard Métricas del Modelo"></iframe>
+
+    <a href="/">⬅ Volver al inicio</a>
+
 </body>
 </html>

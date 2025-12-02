@@ -20,6 +20,9 @@ from werkzeug.utils import secure_filename
 from analisis import analizar_imagen
 from augmentation import augmentar_imagenes
 from pipeline import procesar_imagen_pipeline
+from dash import Dash, html, dcc
+import plotly.express as px
+import pandas as pd
 
 UPLOAD_FOLDER = "static/uploads"
 RESULTS_FOLDER = "static/results"
@@ -38,8 +41,10 @@ os.makedirs(RESULTS_FOLDER, exist_ok=True)
 # =========================================================
 print("Cargando modelo de Keras y clases...")
 
-MODEL_PATH = r"modelo_soybean.keras"
-CLASSES_JSON = r"clases_soybean.json"
+MODEL_PATH = r"model/modelo_soybean.keras"
+CLASSES_JSON = r"model/clases_soybean.json"
+REPORTE_METRICAS = r"model/model_report.csv"
+CONFUSION_MATRIX_CSV = r"model/confusion_matrix.csv"
 
 try:
     model = tf.keras.models.load_model(MODEL_PATH)
@@ -56,6 +61,107 @@ except Exception as e:
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def create_dash_app(app):
+    # =========================================================
+    # GRÁFICO 1: F1-SCORE POR CLASE (ORIGINAL)
+    # =========================================================
+    try:
+        df_f1 = pd.read_csv(REPORTE_METRICAS)
+        df_f1 = df_f1.rename(columns={
+            "Unnamed: 0": "clase",
+            "f1-score": "f1"
+        })
+        fig_f1 = px.bar(
+            df_f1,
+            x="clase",
+            y="f1",
+            text="f1",
+            title=""
+        )
+        fig_f1.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+        fig_f1.update_layout(yaxis_range=[0, 1])
+    except Exception as e:
+        print(f"❌ Error al cargar o generar el gráfico F1-Score: {e}")
+        fig_f1 = None
+
+
+    # =========================================================
+    # GRÁFICO 2: MATRIZ DE CONFUSIÓN (AJUSTE FINAL DE MÁRGENES)
+    # =========================================================
+    try:
+        df_cm = pd.read_csv(CONFUSION_MATRIX_CSV, index_col=0)
+
+        fig_cm = px.imshow(
+            df_cm.values, 
+            x=df_cm.columns.tolist(), 
+            y=df_cm.index.tolist(),
+            text_auto=True,
+            labels={
+                "x": "Clase Predicha",
+                "y": "Clase Verdadera",
+                "color": "Conteo"
+            },
+            title="",
+            color_continuous_scale=px.colors.sequential.Viridis 
+        )
+
+        # Mejoras visuales:
+        fig_cm.update_xaxes(
+            side="top", 
+            tickangle=45, 
+            title_font_size=14
+        ) 
+        fig_cm.update_yaxes(
+            title_font_size=14,
+            autorange="reversed" 
+        )
+        
+        # Ajustar el tamaño del texto dentro de las celdas
+        fig_cm.update_traces(
+            textfont=dict(size=10, color='white') 
+        )
+
+        # AJUSTES DE MÁRGENES CLAVE PARA EVITAR CHOQUES (t=superior, b=inferior)
+        fig_cm.update_layout(
+            title_font_size=20,
+            height=800, 
+            width=800,
+            # Se aumentó 't' (top) a 80 y 'b' (bottom) a 180 para más espacio
+            margin=dict(l=280, r=10, t=180, b=180), 
+            coloraxis_colorbar=dict(title="Conteo")
+        )
+        
+    except Exception as e:
+        print(f"❌ Error al cargar o generar el gráfico de Matriz de Confusión: {e}")
+        fig_cm = None
+
+
+    dash_app = Dash(
+        __name__,
+        server=app,
+        url_base_pathname="/dash/"
+    )
+
+    # =========================================================
+    # LAYOUT DEL DASHBOARD CON AMBOS GRÁFICOS
+    # =========================================================
+    layout_items = [
+        html.H2("Métricas del Modelo - Soja"),
+    ]
+
+    if fig_f1:
+        layout_items.append(html.H3("F1-Score por Clase"))
+        layout_items.append(dcc.Graph(figure=fig_f1))
+
+    if fig_cm:
+        layout_items.append(html.H3("Matriz de Confusión"))
+        layout_items.append(dcc.Graph(figure=fig_cm))
+
+    dash_app.layout = html.Div(layout_items)
+
+
+# Inicializar Dash
+create_dash_app(app)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
