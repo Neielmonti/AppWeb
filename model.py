@@ -1,6 +1,6 @@
 # =====================================
-# 🌿 CLASIFICACIÓN DE HOJAS DE SOJA CON TRANSFER LEARNING (ImageNet)
-# ✅ VERSION CORREGIDA SIN CALLBACKS
+# CLASIFICACIÓN DE HOJAS DE SOJA CON TRANSFER LEARNING (ImageNet)
+# VERSION CORREGIDA SIN CALLBACKS
 # =====================================
 
 import os
@@ -21,7 +21,7 @@ import os
 from dotenv import load_dotenv
 
 # =====================================
-# 1️⃣ CONFIGURACIÓN
+# 1. CONFIGURACIÓN
 # =====================================
 load_dotenv()
 
@@ -43,7 +43,7 @@ EPOCHS = 70
 LEARNING_RATE = 0.00001
 
 # =====================================
-# 2️⃣ FUNCIONES AUXILIARES
+# 2. FUNCIONES AUXILIARES
 # =====================================
 
 def force_remove_readonly(func, path, excinfo):
@@ -105,7 +105,7 @@ def crear_splits():
 
 
 # =====================================
-# 3️⃣ ENTRENAMIENTO CON TRANSFER LEARNING
+# 3. ENTRENAMIENTO CON TRANSFER LEARNING
 # =====================================
 
 def entrenar_modelo():
@@ -159,7 +159,7 @@ def entrenar_modelo():
 
     model.summary()
 
-    # ✅ ENTRENAMIENTO SIN CALLBACKS
+    # ENTRENAMIENTO SIN CALLBACKS
     history = model.fit(
         train_ds,
         validation_data=test_ds,
@@ -167,7 +167,7 @@ def entrenar_modelo():
     )
 
     # =========================
-    # 📈 CURVA DE APRENDIZAJE
+    # CURVA DE APRENDIZAJE
     # =========================
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     plt.figure(figsize=(10, 6))
@@ -235,7 +235,7 @@ def entrenar_modelo():
 
 
 # =====================================
-# 4️⃣ MAIN
+# 4. MAIN
 # =====================================
 if __name__ == "__main__":
     print("🌱 --- MODELO CNN DE HOJAS DE SOJA (ImageNet) ---")
