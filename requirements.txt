@@ -10,3 +10,5 @@ dash
 plotly
 pandas
 python-dotenv
+ultralytics
+huggingface_hub
