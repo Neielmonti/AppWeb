@@ -46,6 +46,14 @@ CLASSES_JSON = r"model/clases_soybean.json"
 REPORTE_METRICAS = r"model/model_report.csv"
 CONFUSION_MATRIX_CSV = r"model/confusion_matrix.csv"
 
+# MODELO BINARIO (para diferenciar entre SOJA y NaO_SOJA)
+BINARIO_MODEL_PATH = r"binary_model/modelo_binario.keras"
+BINARIO_CLASSES_JSON = r"binary_model/clases_binario.json"
+
+modelo_binario = tf.keras.models.load_model(BINARIO_MODEL_PATH)
+with open(BINARIO_CLASSES_JSON, "r") as f:
+    clases_binarias = json.load(f)
+
 try:
     model = tf.keras.models.load_model(MODEL_PATH)
     with open(CLASSES_JSON, "r", encoding="utf-8") as f:
@@ -266,7 +274,7 @@ def detectar_enfermedad():
     if request.method == "POST":
 
         # -------------------------
-        # 1: VALIDAR Y GUARDAR IMAGEN RAW (¡ESTE CÓDIGO FALTABA!)
+        # 1: VALIDAR Y GUARDAR IMAGEN RAW
         # -------------------------
         if "file" not in request.files:
             return "⚠️ No se envió ningún archivo de imagen."
@@ -284,7 +292,24 @@ def detectar_enfermedad():
         file.save(raw_path)
 
         # -------------------------
-        # 2: APLICAR PIPELINE COMPLETO (¡ESTE CÓDIGO FALTABA!)
+        # 2: CHECKEAR SI ES SOJA O NO_SOJA
+        # -------------------------
+        img = tf.keras.utils.load_img(raw_path, target_size=(224, 224))
+        arr = tf.keras.utils.img_to_array(img)
+        arr = np.expand_dims(arr, 0)
+
+        pred_bin = modelo_binario.predict(arr)[0][0]
+
+        if pred_bin < 0.5:
+            return render_template(
+                "detectar_resultado.html",
+                filename=filename,
+                pred_class="❌ La imagen no parece ser soja.",
+                pred_conf=round(float(1 - pred_bin) * 100, 2)
+            )
+
+        # -------------------------
+        # 3: APLICAR PIPELINE COMPLETO
         # -------------------------
         # Aquí es donde se definen las variables 'proc_name' y 'proc_path'
         proc_name = f"{uuid.uuid4().hex}_proc.png"
@@ -300,13 +325,13 @@ def detectar_enfermedad():
 
 
         # -------------------------
-        # 3: VERIFICAR MODELO GLOBAL
+        # 4: VERIFICAR MODELO GLOBAL
         # -------------------------
         if model is None:
             return "❌ Error fatal: El modelo no está cargado en el servidor."
 
         # -------------------------
-        # 4: PREPARAR IMAGEN PARA EL MODELO
+        # 5: PREPARAR IMAGEN PARA EL MODELO
         # -------------------------
         IMG_HEIGHT = 224
         IMG_WIDTH = 224
@@ -323,7 +348,7 @@ def detectar_enfermedad():
             return f"❌ Error preparando la imagen para el modelo: {e}"
 
         # -------------------------
-        # 5: PREDICCIÓN
+        # 6: PREDICCIÓN
         # -------------------------
         try:
             # El modelo recibe [0, 255] y él mismo lo procesa por dentro
@@ -332,16 +357,27 @@ def detectar_enfermedad():
             return f"❌ Error durante la predicción: {e}"
 
         # -------------------------
-        # 6: MOSTRAR RESULTADO
+        # 7: MOSTRAR RESULTADO (CON UMBRALES)
         # -------------------------
-        pred_idx = int(np.argmax(predictions[0])) 
+        pred_idx = int(np.argmax(predictions[0]))
         pred_class = class_names[pred_idx]
         pred_conf = float(np.max(predictions[0]) * 100)
 
+        # UMBRALES DE CONFIANZA
+        X = 20  # confianza mínima
+        Y = 70  # confianza alta
+
+        if pred_conf < X:
+            mensaje = "⚠️ No se pudo determinar la enfermedad con suficiente certeza."
+        elif X <= pred_conf < Y:
+            mensaje = f"🤔 Posible presencia de {pred_class}."
+        else:
+            mensaje = f"✅ La enfermedad detectada es {pred_class}."
+
         return render_template(
             "detectar_resultado.html",
-            filename=proc_name, # ¡'proc_name' también existe ahora!
-            pred_class=pred_class,
+            filename=proc_name,
+            pred_class=mensaje,
             pred_conf=round(pred_conf, 2)
         )
 

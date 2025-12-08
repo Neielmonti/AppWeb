@@ -12,7 +12,7 @@ from datetime import datetime
 # ============================================
 # CONFIGURACIÓN
 # ============================================
-DATASET = r"/home/kmonti/Desktop/dataset_binario"
+DATASET = r"C:\Users\neiel\OneDrive\Desktop\dataset_binario"
 IMG_SIZE = (224, 224)
 BATCH = 16
 EPOCHS = 25
