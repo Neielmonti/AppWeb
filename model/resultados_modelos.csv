@@ -1,0 +1,2 @@
+fecha,modelo,learning_rate,batch_size,epochs,accuracy,f1_macro,modelo_path
+20251209_040658,MobileNetV2,1e-06,8,500,0.8888888955116272,0.8876196705617088,modelo_soybean_imagenet_20251209_040658.keras
