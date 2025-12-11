@@ -43,7 +43,7 @@ print("Cargando modelo de Keras y clases...")
 
 MODEL_PATH = r"model/modelo_soybean.keras"
 CLASSES_JSON = r"model/clases_soybean.json"
-REPORTE_METRICAS = r"model/model_report.csv"
+REPORTE_METRICAS = r"model/reporte.csv"
 CONFUSION_MATRIX_CSV = r"model/confusion_matrix.csv"
 
 # MODELO BINARIO (para diferenciar entre SOJA y NaO_SOJA)
@@ -70,15 +70,16 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def create_dash_app(app):
-    # =========================================================
-    # GRÁFICO 1: F1-SCORE POR CLASE (ORIGINAL)
-    # =========================================================
+    # ================================================
+    # 1) GRÁFICO F1-SCORE POR CLASE
+    # ================================================
     try:
         df_f1 = pd.read_csv(REPORTE_METRICAS)
         df_f1 = df_f1.rename(columns={
             "Unnamed: 0": "clase",
             "f1-score": "f1"
         })
+
         fig_f1 = px.bar(
             df_f1,
             x="clase",
@@ -86,22 +87,55 @@ def create_dash_app(app):
             text="f1",
             title=""
         )
-        fig_f1.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-        fig_f1.update_layout(yaxis_range=[0, 1])
+
+        fig_f1.update_traces(
+            texttemplate='%{text:.2f}',
+            textposition='outside',
+            marker_color="rgba(66,188,113,0.8)"
+        )
+
+        fig_f1.update_layout(
+            yaxis_range=[0, 1.1],
+            margin=dict(l=30, r=30, t=10, b=0),
+            paper_bgcolor="rgb(6,50,40)",
+            plot_bgcolor="rgb(6,50,40)",
+            font=dict(color="white")
+        )
+
+        fig_f1.update_xaxes(
+            color="white",
+            tickfont=dict(size=12)
+        )
+        fig_f1.update_yaxes(
+            color="white",
+            tickfont=dict(size=12)
+        )
+
     except Exception as e:
-        print(f"❌ Error al cargar o generar el gráfico F1-Score: {e}")
+        print(f"❌ Error cargando gráfico F1: {e}")
         fig_f1 = None
 
-
-    # =========================================================
-    # GRÁFICO 2: MATRIZ DE CONFUSIÓN (AJUSTE FINAL DE MÁRGENES)
-    # =========================================================
+    # ================================================
+    # 2) MATRIZ DE CONFUSIÓN
+    # ================================================
     try:
         df_cm = pd.read_csv(CONFUSION_MATRIX_CSV, index_col=0)
 
+        # Definir la escala de color personalizada
+        # 1. Color de inicio (oscuro, cercano al fondo)
+        start_color = "rgb(15, 65, 50)" 
+        # 2. Color de fin (tu verde deseado para los valores altos)
+        end_color = "rgb(66, 188, 113)" 
+        
+        # Crear una escala secuencial simple de dos tonos
+        custom_scale = [
+            [0.0, start_color],
+            [1.0, end_color]
+        ]
+
         fig_cm = px.imshow(
-            df_cm.values, 
-            x=df_cm.columns.tolist(), 
+            df_cm.values,
+            x=df_cm.columns.tolist(),
             y=df_cm.index.tolist(),
             text_auto=True,
             labels={
@@ -110,62 +144,124 @@ def create_dash_app(app):
                 "color": "Conteo"
             },
             title="",
-            color_continuous_scale=px.colors.sequential.Viridis 
+            # Usar la nueva escala personalizada
+            color_continuous_scale=custom_scale
         )
 
-        # Mejoras visuales:
+        # Ejes y texto
         fig_cm.update_xaxes(
-            side="top", 
-            tickangle=45, 
-            title_font_size=14
-        ) 
-        fig_cm.update_yaxes(
-            title_font_size=14,
-            autorange="reversed" 
+            side="top",
+            tickangle=45,
+            tickfont=dict(size=12, color="white"),
+            title_font=dict(size=14, color="white")
         )
-        
-        # Ajustar el tamaño del texto dentro de las celdas
-        fig_cm.update_traces(
-            textfont=dict(size=10, color='white') 
+        fig_cm.update_yaxes(
+            autorange="reversed",
+            tickfont=dict(size=12, color="white"),
+            title_font=dict(size=14, color="white")
         )
 
-        # AJUSTES DE MÁRGENES CLAVE PARA EVITAR CHOQUES (t=superior, b=inferior)
-        fig_cm.update_layout(
-            title_font_size=20,
-            height=800, 
-            width=800,
-            # Se aumentó 't' (top) a 80 y 'b' (bottom) a 180 para más espacio
-            margin=dict(l=280, r=10, t=180, b=180), 
-            coloraxis_colorbar=dict(title="Conteo")
+        # Mantener el texto blanco, ahora será legible sobre el verde (66, 188, 113)
+        fig_cm.update_traces(
+            textfont=dict(size=14, color="white")
         )
-        
+
+        fig_cm.update_layout(
+            height=400,
+            width=None,
+            margin=dict(l=200, r=200, t=0, b=10),
+            paper_bgcolor="rgb(6,50,40)",
+            plot_bgcolor="rgb(6,50,40)",
+            font=dict(color="white")
+        )
+
     except Exception as e:
-        print(f"❌ Error al cargar o generar el gráfico de Matriz de Confusión: {e}")
+        print(f"❌ Error cargando matriz de confusión: {e}")
         fig_cm = None
 
-
+    # ================================================
+    # 3) CREAR APP DASH CON ESTILO GLOBAL
+    # ================================================
     dash_app = Dash(
         __name__,
         server=app,
         url_base_pathname="/dash/"
     )
 
-    # =========================================================
-    # LAYOUT DEL DASHBOARD CON AMBOS GRÁFICOS
-    # =========================================================
-    layout_items = [
-        html.H2("Métricas del Modelo - Soja"),
-    ]
+    # Estilo global para h2 y h3
+    dash_app.index_string = """
+    <!DOCTYPE html>
+    <html>
+        <head>
+            {%metas%}
+            <title>Métricas del Modelo</title>
+            {%favicon%}
+            {%css%}
+            <style>
+                body {
+                    background-color: rgb(6,50,40);
+                }
+                h2 {
+                    text-align: center;
+                    color: white !important;
+                    font-family: "Montserrat", sans-serif !important;
+                }
+                h3 {
+                    color: white !important;
+                    font-family: Arial, sans-serif !important;
+                    text-align: left;
+                    width: 80%;
+                }
+            </style>
+        </head>
+        <body>
+            {%app_entry%}
+            <footer>
+                {%config%}
+                {%scripts%}
+                {%renderer%}
+            </footer>
+        </body>
+    </html>
+    """
+
+    # ================================================
+    # 4) LAYOUT DASHBOARD
+    # ================================================
+    layout_items = [ html.H2("") ]
 
     if fig_f1:
         layout_items.append(html.H3("F1-Score por Clase"))
-        layout_items.append(dcc.Graph(figure=fig_f1))
+        layout_items.append(dcc.Graph(figure=fig_f1,style={"width": "75%", "height": "15rem"}))
+        
+        # 💡 AÑADIR SEPARADOR BLANCO AQUÍ
+        layout_items.append(
+            html.Div(style={
+                "borderTop": "2px solid white",  # Línea blanca sólida de 2px
+                "margin": "10px 10px",             # Margen superior e inferior para espacio
+                "width": "90%",                 # Ancho de la línea
+                "marginLeft": "auto",           # Centrar
+                "marginRight": "auto"           # Centrar
+            })
+        )
+        
 
     if fig_cm:
         layout_items.append(html.H3("Matriz de Confusión"))
-        layout_items.append(dcc.Graph(figure=fig_cm))
+        layout_items.append(dcc.Graph(figure=fig_cm,style={"width": "70%", "height": "70%"}))
 
-    dash_app.layout = html.Div(layout_items)
+    # ================================================
+    # 4) LAYOUT DASHBOARD - APLICAR ESTILOS FLEXBOX AQUÍ
+    # ================================================
+    dash_app.layout = html.Div(
+        layout_items,
+        # Agregamos el estilo al contenedor principal (html.Div)
+        style={
+            "display": "flex",          # Activa Flexbox
+            "flexDirection": "column",  # Apila los elementos verticalmente (H2, H3, Graph)
+            "alignItems": "center"      # Centra los elementos a lo largo del eje transversal (horizontalmente en este caso)
+        }
+    )
 
 
 # Inicializar Dash
@@ -303,7 +399,7 @@ def detectar_enfermedad():
         if pred_bin < 0.5:
             return render_template(
                 "detectar_resultado.html",
-                filename=filename,
+                filename="no_soja.jpg",
                 pred_class="❌ La imagen no parece ser soja.",
                 pred_conf=round(float(1 - pred_bin) * 100, 2)
             )
@@ -375,11 +471,12 @@ def detectar_enfermedad():
             mensaje = f"✅ La enfermedad detectada es {pred_class}."
 
         return render_template(
-            "detectar_resultado.html",
-            filename=proc_name,
-            pred_class=mensaje,
-            pred_conf=round(pred_conf, 2)
-        )
+                    "detectar_resultado.html",
+                    filename=filename, # <-- CAMBIADO: Usar el nombre de archivo original
+                    file_folder="uploads", # <-- AÑADIDO: Ruta a static/uploads
+                    pred_class=mensaje,
+                    pred_conf=round(pred_conf, 2)
+                )
 
     # GET → mostrar formulario
     return render_template("detectar_enfermedad.html")

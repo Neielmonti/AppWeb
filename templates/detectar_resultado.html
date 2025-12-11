@@ -4,23 +4,127 @@
 <meta charset="UTF-8">
 <title>Resultado de detección</title>
 <style>
-body { font-family: Arial, sans-serif; text-align: center; padding: 40px; background: #f5f5f5; }
-img { max-width: 400px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); margin: 20px; }
-.result { background: white; padding: 20px; border-radius: 10px; display: inline-block; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-button, a { text-decoration: none; color: white; background: #4CAF50; padding: 10px 20px; border-radius: 5px; margin-top: 20px; display: inline-block; }
-button:hover, a:hover { background: #45a049; }
+        /* ========================================================= */
+        /* Estilos importados del código principal */
+        /* ========================================================= */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+
+        body {
+            /* Estilo de fondo oscuro y degradado */
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 40px;
+            background: 
+                linear-gradient(rgba(244, 246, 248, 0.0),rgba(255, 255, 255, 0.0), rgba(0, 0, 0, 0.7)),
+                url("static/images/background_soybean2.jpeg");
+            background-size: cover;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+        }
+
+        h1 {
+            color: rgb(6, 50, 40);
+            margin-top: 5px;
+            margin-bottom: 5px;
+            font-family: "Montserrat", sans-serif !important;
+        }
+        
+        h2 {
+            color: white !important;
+            font-family: Arial, sans-serif !important;
+            font-weight: 0;
+        }
+        
+        p {
+            margin-top: 5px;
+            margin-bottom: 5px;
+            font-family: "Rubik", sans-serif !important;
+            color: white;
+        }
+
+        /* Estilo del contenedor de resultado */
+        .result { 
+            background: rgb(6, 50, 40);
+            padding: 30px; 
+            border-radius: 1rem; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.7);
+            max-width: 500px;
+            min-width: fit-content,
+            width: 100%;
+            margin-bottom: 2rem;
+        }
+
+        img { 
+            width: auto;
+            max-height: 20rem;
+            border-radius: 1rem; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.4); 
+            margin: 20px 0; 
+            display: block;
+        }
+
+        /* Estilos del botón/enlace (Aplicando la transición) */
+        a {
+            /* Usamos la misma estructura de botón del código principal */
+            font-family: "Rubik", sans-serif;
+            padding: 12px 25px;
+            background: rgb(62, 177, 106);
+            color: white;
+            text-shadow: 1px 2px 4px rgba(0,0,0,0.3);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none; /* Asegurar que no haya subrayado por defecto */
+            margin: 10px; /* Separación entre los dos enlaces */
+            display: inline-block;
+            font-weight: normal;
+
+            /* TRANSICIÓN: Aplicada al estado base */
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        a:hover {
+            background: rgb(43, 132, 73); /* Color de fondo en hover */
+            color: white; /* Mantener color del texto */
+            text-decoration: none; /* Evitar que se subraye al hacer hover */
+        }
+        
+        /* Aseguramos que la etiqueta 'p' del resultado también use Rubik */
+        p {
+            font-family: "Rubik", sans-serif !important;
+        }
+
+        p .confianza-valor {
+            /* Color específico para el porcentaje */
+            color: rgb(62, 177, 106);
+            font-weight: 500; /* Opcional: hacerlo más audaz para resaltarlo */
+        }
+
 </style>
 </head>
 <body>
-<h1>🩺 Resultado del Análisis</h1>
+<h1>Resultado del Análisis</h1>
 
 <div class="result">
-    <img src="{{ url_for('static', filename='results/' + filename) }}" alt="Imagen procesada">
+    <img 
+        src="{{ url_for('static', filename= 'images/no_soja.jpg' if 'no_soja.jpg' in filename else 'uploads/' + filename) }}" 
+        alt="Imagen de resultado"
+    >
     <h2>Predicción: {{ pred_class }}</h2>
-    <p>Confianza: {{ pred_conf }}%</p>
+    <p>Confianza: <span class="confianza-valor">{{ pred_conf }}%</span></p>
 </div>
 
-<a href="/detectar_enfermedad">🔄 Analizar otra imagen</a>
-<a href="/">🏠 Volver al inicio</a>
+<div>
+    <a href="/detectar_enfermedad">Analizar otra imagen 🔄</a>
+    <a href="/">Volver al inicio 🏠</a>
+</div>
 </body>
 </html>
