@@ -365,6 +365,18 @@ def download_file(filename):
         mimetype="application/zip"
     )
 
+nombres_legibles = {
+    "Septoria_Glycines": "Septoria Glycines",
+    "bacterial_blight": "Bacterial Blight",
+    "cercospora_leaf_blight": "Cercospora Leaf Blight",
+    "downey_mildew": "Downey Mildew",
+    "frogeye": "Frogeye",
+    "healthy": "Saludable",
+    "potassium_deficiency": "Potassium Deficiency",
+    "soybean_rust": "Soybean Rust",
+    "target_spot": "Target Spot"
+}
+
 @app.route("/detectar_enfermedad", methods=["GET", "POST"])
 def detectar_enfermedad():
     if request.method == "POST":
@@ -453,30 +465,50 @@ def detectar_enfermedad():
             return f"❌ Error durante la predicción: {e}"
 
         # -------------------------
-        # 7: MOSTRAR RESULTADO (CON UMBRALES)
+        # 7: MOSTRAR RESULTADO (MENSAJES SEMÁNTICOS)
         # -------------------------
         pred_idx = int(np.argmax(predictions[0]))
-        pred_class = class_names[pred_idx]
+        raw_class = class_names[pred_idx]
+        
+        # Obtenemos el nombre amigable
+        nombre_display = nombres_legibles.get(raw_class, raw_class.replace("_", " ").title())
         pred_conf = float(np.max(predictions[0]) * 100)
 
-        # UMBRALES DE CONFIANZA
-        X = 20  # confianza mínima
-        Y = 70  # confianza alta
+        # Configuración de umbrales
+        X = 20  # Confianza mínima
+        Y = 70  # Confianza alta
 
         if pred_conf < X:
-            mensaje = "⚠️ No se pudo determinar la enfermedad con suficiente certeza."
-        elif X <= pred_conf < Y:
-            mensaje = f"🤔 Posible presencia de {pred_class}."
+            mensaje = "⚠️ El sistema no está seguro de qué le ocurre a la hoja."
+        
+        elif raw_class == "healthy":
+            # Caso especial para plantas sanas
+            if pred_conf < Y:
+                mensaje = f"🤔 La planta parece estar mayormente {nombre_display.lower()}."
+            else:
+                mensaje = f"✅ La planta se encuentra {nombre_display.lower()}."
+        
+        elif raw_class == "potassium_deficiency":
+            # Caso especial para deficiencias (no es una enfermedad infecciosa)
+            if pred_conf < Y:
+                mensaje = f"🤔 Podría haber una {nombre_display.lower()}."
+            else:
+                mensaje = f"⚠️ Se ha identificado {nombre_display.lower()}."
+        
         else:
-            mensaje = f"✅ La enfermedad detectada es {pred_class}."
+            # Caso general para enfermedades
+            if pred_conf < Y:
+                mensaje = f"🤔 Posible presencia de {nombre_display}."
+            else:
+                mensaje = f"❌ Se ha detectado {nombre_display} con alta certeza."
 
         return render_template(
-                    "detectar_resultado.html",
-                    filename=filename, # <-- CAMBIADO: Usar el nombre de archivo original
-                    file_folder="uploads", # <-- AÑADIDO: Ruta a static/uploads
-                    pred_class=mensaje,
-                    pred_conf=round(pred_conf, 2)
-                )
+            "detectar_resultado.html",
+            filename=filename,
+            file_folder="uploads",
+            pred_class=mensaje,
+            pred_conf=round(pred_conf, 2)
+        )
 
     # GET → mostrar formulario
     return render_template("detectar_enfermedad.html")

@@ -53,9 +53,10 @@
             margin: 15px;
             margin-top: 0;
             font-size: 15px;
+            text-align: right !important;
         }
 
-        button {
+        input[type="file"]::file-selector-button {
             font-family: "Rubik", sans-serif;
             padding: 12px 25px;
             background: rgb(62, 177, 106);
@@ -68,7 +69,7 @@
             transition: background-color 0.2s ease, color 0.2s ease;
         }
 
-        button:hover {
+        input[type="file"]::file-selector-button:hover {
             background: rgb(43, 132, 73);
             transition: background-color 0.2s ease, color 0.2s ease;
         }
@@ -97,6 +98,52 @@
         a:hover {
             text-decoration: underline;
         }
+
+
+        .button-64 {
+          align-items: center;
+          background-image: linear-gradient(144deg, rgb(35, 30, 100), rgb(40, 66, 243) 50%, rgb(0, 221, 235));
+          border: 0;
+          border-radius: 8px;
+          box-shadow: rgba(151, 65, 252, 0.3) 0 15px 30px -5px;
+          box-sizing: border-box;
+          color: rgb(0, 221, 235);
+          display: flex;
+          font-family: Phantomsans, sans-serif;
+          font-size: 20px;
+          justify-content: center;
+          line-height: 1em;
+          max-width: 100%;
+          min-width: 140px;
+          padding: 3px;
+          text-decoration: none;
+          user-select: none;
+          -webkit-user-select: none;
+          touch-action: manipulation;
+          white-space: nowrap;
+          cursor: pointer;
+        }
+
+        .button-64:active,
+        .button-64:hover {
+          box-shadow: rgba(151, 65, 252, 0.5) 0 15px 30px -5px;
+          outline: 0;
+          color: rgb(17, 27, 48);
+        }
+
+        .button-64 span {
+          background-color: rgb(17, 27, 48);
+          padding: 16px 24px;
+          border-radius: 6px;
+          width: 100%;
+          height: 100%;
+          transition: 300ms;
+        }
+
+        .button-64:hover span {
+          background: none;
+        }
+        
     </style>
 </head>
 <body>
@@ -106,7 +153,7 @@
 
     <form action="/detectar_enfermedad" method="POST" enctype="multipart/form-data">
         <input type="file" name="file" accept="image/*" required>
-        <button type="submit"> Analizar imagen 🔍</button>
+        <button type="submit" class="button-64"><span>Analizar imagen</span></button>
     </form>
 
     <h1>Métricas del modelo</h1>

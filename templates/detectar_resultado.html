@@ -11,19 +11,31 @@
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
 
         body {
-            /* Estilo de fondo oscuro y degradado */
+            /* 1. Resetear márgenes y evitar desbordamiento */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* Crucial para que el padding no sume tamaño extra */
+            
+            /* 2. Ocupar toda la pantalla */
+            width: 100%;
+            height: 100vh; /* Altura exacta de la ventana */
+            overflow: hidden; /* Evita cualquier scroll accidental */
+
+            /* 3. Estilo de fondo */
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 40px;
             background: 
-                linear-gradient(rgba(244, 246, 248, 0.0),rgba(255, 255, 255, 0.0), rgba(0, 0, 0, 0.7)),
-                url("static/images/background_soybean2.jpeg");
+                linear-gradient(rgba(244, 246, 248, 0.0), rgba(255, 255, 255, 0.0), rgba(0, 0, 0, 0.7)),
+                url("static/images/background_soybean.jpeg");
             background-size: cover;
+            background-position: center; /* Centra la imagen de fondo */
             background-repeat: no-repeat;
+
+            /* 4. Alineación del contenido */
             display: flex;
             flex-direction: column;
+            justify-content: center; /* Centra verticalmente todo el contenido */
             align-items: center;
-            height: 100vh;
         }
 
         h1 {
@@ -37,6 +49,7 @@
             color: white !important;
             font-family: Arial, sans-serif !important;
             font-weight: 0;
+            margin: 5px 5px;
         }
         
         p {
@@ -56,17 +69,17 @@
             align-items: center;
             box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.7);
             max-width: 500px;
-            min-width: fit-content,
-            width: 100%;
-            margin-bottom: 2rem;
+            min-width: fit-content;
+            width: auto;
+            margin-bottom: 1rem;
         }
 
         img { 
             width: auto;
-            max-height: 20rem;
+            max-height: 18rem;
             border-radius: 1rem; 
             box-shadow: 0 0 10px rgba(0,0,0,0.4); 
-            margin: 20px 0; 
+            margin: 5px 5px; 
             display: block;
         }
 
