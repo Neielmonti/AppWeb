@@ -38,8 +38,8 @@ RESULTS_LOG = os.path.join(SPLIT_PATH, "resultados_modelos.csv")
 TEST_SIZE = 0.2
 RANDOM_STATE = 42
 IMG_HEIGHT, IMG_WIDTH = 224, 224
-BATCH_SIZE = 16
-EPOCHS = 90
+BATCH_SIZE = 8
+EPOCHS = 500
 LEARNING_RATE = 0.000001
 
 # =====================================

@@ -50,6 +50,15 @@ CONFUSION_MATRIX_CSV = r"model/confusion_matrix.csv"
 BINARIO_MODEL_PATH = r"binary_model/modelo_binario.keras"
 BINARIO_CLASSES_JSON = r"binary_model/clases_binario.json"
 
+
+
+import os
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+# Esto ayuda a que el modelo sea accesible desde cualquier hilo de Flask
+tf.keras.backend.clear_session() # Limpia estados residuales
+
+
+
 modelo_binario = tf.keras.models.load_model(BINARIO_MODEL_PATH)
 with open(BINARIO_CLASSES_JSON, "r") as f:
     clases_binarias = json.load(f)
@@ -513,5 +522,11 @@ def detectar_enfermedad():
     # GET → mostrar formulario
     return render_template("detectar_enfermedad.html")
 
+"""
 if __name__ == "__main__":
     app.run(debug=True)
+"""
+
+if __name__ == "__main__":
+    # Debug en False y use_reloader en False son claves para TensorFlow
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
