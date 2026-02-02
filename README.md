@@ -18,6 +18,25 @@ Hay diferentes direcciones para diferentes funcionalidades:
 + http://127.0.0.1:5000/preprocesar -> Para preprocesar un dataset (subido en .zip)
 + http://127.0.0.1:5000/detectar_enfermedad -> Para detectar la enfermedad de una foto
 
+## ACCESO DESDE OTRO DISPOSITIVO (NGROK)
+
+### Paso 1: Corra la aplicacion Flask
+Asegúrese de que el servidor esté corriendo localmente:
+- python app.py
+
+La aplicación debe estar accesible en:
++ http://127.0.0.1:5000
+
+### Paso 2: Inicie ngrok
+En otra terminal, ejecute:
+- ngrok http 5000
+
+Ngrok mostrará una URL pública (https://xxxx.ngrok.io).
+
+### Paso 3: Acceda desde otro dispositivo
+Desde su celular u otro equipo, abra la URL pública provista por ngrok en el navegador.
+
+Ngrok redirige las conexiones externas a la aplicación local que corre en el puerto 5000.
 
 ## ENTRENAMIENTO DEL MODELO
 Copie y pegue el archivo .env_example, y a la copia cambiele el nombre a ".env".
