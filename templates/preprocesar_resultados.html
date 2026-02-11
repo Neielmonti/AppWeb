@@ -1,67 +1,19 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dataset Preprocesado</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #eef1f5;
-        }
+{% extends "layout.html" %}
 
-        .container {
-            max-width: 600px;
-            margin: 60px auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            text-align: center;
-        }
+{% block title %}Dataset Listo{% endblock %}
 
-        h1 {
-            color: #333;
-        }
+{% block content %}
+    <div class="glass-container" style="margin-top: 60px;">
+        <h1 style="color: white;">Dataset Preprocesado</h1>
+        <p>Tu dataset ya está listo para entrenar el modelo 🎉</p>
 
-        a.download {
-            display: inline-block;
-            margin-top: 25px;
-            padding: 12px 20px;
-            background: #0066ff;
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            font-size: 17px;
-            transition: 0.3s;
-        }
+        <a class="btn-std" href="/download/{{ zip_filename }}" download style="background: #0066ff; padding: 15px 30px; font-size: 1.2rem;">
+            📦 Descargar ZIP
+        </a>
 
-        a.download:hover {
-            background: #004ccc;
-        }
-
-        a.back {
-            display: block;
-            margin-top: 20px;
-            text-decoration: none;
-            color: #444;
-        }
-
-        a.back:hover {
-            color: black;
-        }
-    </style>
-</head>
-<body>
-
-<div class="container">
-    <h1>Dataset Preprocesado Correctamente</h1>
-    <p>Tu dataset ya está listo para entrenar el modelo 🎉</p>
-
-    <a class="download" href="/download/{{ zip_filename }}" download>📦 Descargar ZIP</a>
-
-    <a class="back" href="/preprocesar">⬅ Procesar otro dataset</a>
-    <a class="back" href="/">🏡 Volver al inicio</a>
-</div>
-
-</body>
-</html>
+        <div style="margin-top: 20px;">
+            <a href="/preprocesar" style="color: #ccc; display: block; margin-bottom: 10px;">⬅ Procesar otro dataset</a>
+            <a href="/" style="color: #ccc; display: block;">🏡 Volver al inicio</a>
+        </div>
+    </div>
+{% endblock %}

@@ -1,24 +1,22 @@
-<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8">
-    <title>Resultados</title>
-    <style>
-      body { font-family: Arial, sans-serif; padding: 20px; }
-      img { max-width: 400px; margin: 10px; }
-      .card { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; }
-    </style>
-  </head>
-  <body>
+{% extends "layout.html" %}
+
+{% block title %}Resultados del Análisis{% endblock %}
+
+{% block content %}
     <h1>📊 Resultados del análisis</h1>
-    {% for r in resultados %}
-      <div class="card">
-        <h2>{{ r.filename }}</h2>
-        <img src="/{{ r.filepath }}" alt="Imagen original">
-        <img src="/{{ r.histograma }}" alt="Histograma">
-        <pre>{{ r.stats | tojson(indent=2) }}</pre>
-      </div>
-    {% endfor %}
-    <a href="/">⬅️ Volver</a>
-  </body>
-</html>
+    
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+        {% for r in resultados %}
+        <div class="glass-container" style="max-width: 450px;">
+            <h2 style="color: white; font-size: 1.1rem;">{{ r.filename }}</h2>
+            <img src="/{{ r.filepath }}" alt="Imagen original" class="preview" style="max-height: 12rem;">
+            <img src="/{{ r.histograma }}" alt="Histograma" class="preview" style="max-height: 12rem;">
+            <pre style="text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 5px; font-size: 0.8rem; overflow-x: auto; width: 100%;">
+                {{ r.stats | tojson(indent=2) }}
+            </pre>
+        </div>
+        {% endfor %}
+    </div>
+
+    <a href="/" class="btn-std" style="margin: 30px;">⬅️ Volver</a>
+{% endblock %}

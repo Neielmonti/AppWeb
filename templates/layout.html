@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <title>{% block title %}SoyEye - Análisis de Soja{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    {% if request.path != '/' %}
+    <a href="/" class="logo-home">
+        <img src="{{ url_for('static', filename='images/logo_soyeye.png') }}" alt="SoyEye Logo">
+    </a>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+    <footer style="margin-top: 40px; padding-bottom: 20px;">
+        <p style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">SoyEye AI Project © 2026</p>
+    </footer>
+
+</body>
+</html>

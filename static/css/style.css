@@ -1,0 +1,141 @@
+/* static/css/style.css */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap');
+
+:root {
+    --primary-dark: rgb(6, 50, 40);
+    --accent-green: #3eb16a;
+    --hover-green: rgb(43, 132, 73);
+    --soft-white: #f4f6f8;
+    --shadow: 0px 4px 12px rgba(0, 0, 0, 0.7);
+}
+
+body {
+    font-family: "Rubik", sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), 
+                url("../images/background_soybean.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Tipografía */
+h1, h2, h3, p {
+    font-family: "Montserrat", sans-serif !important;
+    color: var(--soft-white);
+}
+
+body > h1 { margin-top: 20px; }
+
+/* Contenedores Genéricos (Formularios y Resultados) */
+.glass-container, form {
+    background: var(--primary-dark);
+    padding: 25px;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    margin: 20px auto;
+    max-width: 600px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Inputs y Botones Estándar */
+input[type="file"] {
+    margin: 15px;
+    color: white;
+}
+
+button, .btn-std {
+    font-family: "Rubik", sans-serif;
+    padding: 12px 25px;
+    background: var(--accent-green);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-decoration: none;
+}
+
+button:hover, .btn-std:hover {
+    background: var(--hover-green);
+}
+
+/* El famoso Botón 64 (Efecto Gradiente) */
+.button-64 {
+    align-items: center;
+    background-image: linear-gradient(144deg, rgb(35, 30, 100), rgb(40, 66, 243) 50%, rgb(0, 221, 235));
+    border: 0;
+    border-radius: 8px;
+    box-shadow: rgba(151, 65, 252, 0.3) 0 15px 30px -5px;
+    color: rgb(0, 221, 235);
+    display: flex;
+    font-size: 20px;
+    justify-content: center;
+    padding: 3px;
+    text-decoration: none;
+    cursor: pointer;
+    margin: 10px;
+}
+
+.button-64 span {
+    background-color: rgb(17, 27, 48);
+    padding: 16px 24px;
+    border-radius: 6px;
+    width: 100%;
+    height: 100%;
+    transition: 300ms;
+}
+
+.button-64:hover span { background: none; color: white; }
+
+/* Imágenes y Gráficos */
+img.preview {
+    max-width: 100%;
+    max-height: 18rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.4);
+    margin: 15px 0;
+}
+
+.confianza-valor {
+    color: var(--accent-green);
+    font-weight: bold;
+}
+
+/* Dashboard / Iframes */
+iframe {
+    padding: 1.5rem;
+    border: none;
+    width: 95%;
+    max-width: 60rem;
+    min-height: 55rem;
+    background: var(--primary-dark);
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    margin-top: 1rem;
+}
+
+/* Logo Home */
+.logo-home {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+}
+
+.logo-home img {
+    width: 50px;
+    transition: transform 0.2s;
+}
+
+.logo-home img:hover { transform: scale(1.1); }
